@@ -40,5 +40,6 @@ else
    BUILD_ARCH="$DEFAULT_ARCH"
 fi
 cd ../../../..
+mkdir -p data/ivory/logs
 build/gcc/$BUILD_ARCH/app/ivory/ivorysc config/ivory/suites/regression.suite data/ivory/logs/test.log
 
