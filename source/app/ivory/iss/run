@@ -1,0 +1,43 @@
+#!/bin/bash
+
+set -u
+
+# --- 1. Detect Host Machine Architecture ---
+ARCH_TYPE=$(uname -m)
+
+# --- 2. Map Native Native 64-bit / 32-bit Host Profiles ---
+case "$ARCH_TYPE" in
+   x86_64)
+      DEFAULT_ARCH="x86_64"
+      ;;
+   armv7l)
+      DEFAULT_ARCH="arm-linux"
+      ;;
+   aarch64)
+      DEFAULT_ARCH="aarch64-linux"
+      ;;
+   *)
+      echo "Unsupported host architecture: $ARCH_TYPE" >&2
+      exit 1
+      ;;
+esac
+
+# --- 3. Evaluate 32-Bit Forced Optimization Override ---
+# Checks if IVORYSCRIPT_32 is set to 1 or true via your execution line
+if [ "${IVORYSCRIPT_32:-0}" = "1" ] || [ "${IVORYSCRIPT_32:-0}" = "true" ]; then
+   case "$ARCH_TYPE" in
+      x86_64)
+         # 32-bit application folder convention on an Intel Host
+         BUILD_ARCH="x86-linux" 
+         ;;
+      armv7l|aarch64)
+         # 32-bit application folder convention on an ARM Host
+         BUILD_ARCH="arm-linux"
+         ;;
+   esac
+else
+   # If no override is declared, scale directly to native system defaults
+   BUILD_ARCH="$DEFAULT_ARCH"
+fi
+cd ../../../../scripts
+../../build/gcc/$BUILD_ARCH/app/ivory/iss

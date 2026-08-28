@@ -1,0 +1,15 @@
+# yacc_builder/awk_it
+BEGIN { FS = "\t" }
+/^Terminal|^Monadic|^Dyadic/ {
+    printf "%%token %s 10%s\n", $3, $2
+}
+/^Pseudo-terminal/ {
+    if ($5 != "")
+        printf "%%token %s %s %s\n", $5, $3, $2
+    else
+        printf "%%token %s 10%s\n", $3, $2
+}
+/^Non-terminal/ {
+    printf "%%type <_expr> %s\n", $3
+}
+

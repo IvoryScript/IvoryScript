@@ -1,0 +1,4 @@
+-- C style formatting
+
+"Integer " ++ (format "%03d" 42) ++ ", Double " ++ (format "%.10f" pi)
+

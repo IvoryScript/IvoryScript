@@ -1,0 +1,24 @@
+
+let { (fac :: Int -> Int) n = if n = 0 then 1 else n * fac (n - 1) } in {
+    show (fac 0);  show '\n';
+    show (fac 1);  show '\n';
+    show (fac 5);  show '\n';
+    show (fac 10); show '\n'
+};
+
+let { (fib :: Int -> Int) n = if n < 2 then n else fib (n - 1) + fib (n - 2) } in {
+    show (fib 0);  show '\n';
+    show (fib 1);  show '\n';
+    show (fib 7);  show '\n';
+    show (fib 10); show '\n'
+};
+
+let {
+    (isEven :: Int -> Bool) n = if n = 0 then True else isOdd (n - 1);
+    (isOdd  :: Int -> Bool) n = if n = 0 then False else isEven (n - 1)
+} in {
+    show (isEven 4); show '\n';
+    show (isEven 7); show '\n';
+    show (isOdd 3);  show '\n';
+    show (isOdd 8);  show '\n'
+};

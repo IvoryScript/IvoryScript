@@ -1,0 +1,155 @@
+2003-10-15  Luc Moreau  <L.Moreau@ecs.soton.ac.uk>
+
+	* syntax.h: Variable::generate_code() now generating proper MOV
+	instruction for startevent (though still hardcoded with strings).
+
+	changed code generation for constant pattern so that, in case of failure,
+	it jumps to next label (and not current one!).
+
+	* display.cpp (display_instruction): added JMP_INSN
+
+	* parse.cpp: registered unary_instruction JMP
+
+	* exec.cpp: added execution for JMP_INSN
+
+	* instructions.h : added absolute jump: JMP_INSN
+
+	* generate.cpp: prepare_non_primitive_call() now generates the
+	move instruction to the correct typed register when returning from
+	call.
+
+	* syntax.cpp: changed LetExpression::generate
+	so that type is passed as argument.
+
+	* unassembled.h: 
+	    - changing get_next_num for ENTER->0
+	    - changing get_next_num for MOV_P->2
+	    
+
+2003-06-11  Luc Moreau  <L.Moreau@ecs.soton.ac.uk>
+
+	* syntax.h: swapped order of code generation in conditional, else first
+	then second.
+
+	changed the recursive call of Application::construct_frames() so
+	that it operates or rator and operands (and not on function and arguments
+	which are prenormalisation!).
+
+2003-06-04  Luc Moreau  <L.Moreau@ecs.soton.ac.uk>
+
+	* syntax.h: added support for an Icode and C++ label in
+	  the frame generated for a combination
+	  
+	  added a surroundFrameGeneratingConstruct for IntValue
+	  added stack dropping in terminal position when returning
+	   an intValue (as for variable)
+
+2003-05-28  Luc Moreau  <L.Moreau@ecs.soton.ac.uk>
+
+	* unassembled.h: in macro_expansion of MOV_E, I defined
+	the frame_a and frame_b variables for the expanded code,
+	so that stack offsets size can be computed.
+
+	initilise environment to false in Spb constructor.
+	
+
+	added TAG_SIZE
+
+	changed emit for addressing such that environment=1 so
+	that WORD_SIZE is added to size (instead of 1)
+
+	* generate.cpp:  computeTypeSize(char* s) computes the space
+	required by a given type.
+	
+
+	* exec.h (bytecode_enter): redefined enter into bytecode_enter
+
+2003-05-21  Luc Moreau  <L.Moreau@ecs.soton.ac.uk>
+
+	* unassembled.h: ENTER_insn now has one
+	successor: it is the DROPPED directive that will stop the
+	frame propagation analysis.
+	
+
+	* syntax.h: in Module define the resultType of the lambdaExpression
+
+	construct_local_frames: adds a label argument
+
+	reorder the BRA instruction in code generated for conditional
+
+	* unassembled.h: changed second argument to environmentizeArgument
+	so that it is not the copy altered by parsing.
+
+	changing spB, indexed register, and celle registor so that they
+	support environmentize like Spa, simply because we can get
+	closures allocated on spB
+
+	changing closure so that it supports a frameA size (therefore it
+	requires 4 arguments!)
+	
+
+2003-03-05  Luc Moreau  <L.Moreau@ecs.soton.ac.uk>
+
+	* ivory_runtime.cpp: defined a cellInfo constructor that takes a icode_label.
+
+	* parse.cpp: introduced a table of absoluted offset,
+
+	* exec.h (_levaluate2,_revaluate2): had to fix spA(x) mode and had to multiply
+	index by WORD_SIZE.
+
+	* unassembled.h (environmentizeArgument): reimplemented fully the
+	expansion of MOV_E to support the new registers ptr and cell.
+
+	* exec.cpp: support for ptr and ptrEnv registers.
+
+	* exec.h (_revaluate2): Define execution mode for the new indexed
+	register modes cell and ptr: PROBLEM: should they also operate
+	for cellEnv and ptrEnv?
+
+	* unassembled.h (computeOffset): parse the arguments of the new
+	indexing modes cell and ptr and compute offsets.
+
+	* exec.h (_revaluate2): adding support for PTR_MODE and CELL_MODE 
+
+2003-02-19  Luc Moreau  <L.Moreau@ecs.soton.ac.uk>
+
+	* unassembled.h: added new addressing modes
+	CELL and PTR
+
+	* parse.cpp: added new registers ptr, ptrEnv and addressing modes
+	CELL and PTR
+
+	* unassembled.h: macro expansion of MOV_E properly
+	handles environments!
+	
+	In FRAME_insn, there is now a method supposed
+	to compute the index of a variable in the stack.
+	Currently, it assume a constant word size for all types!
+
+	adding a computeOffset for b stack reference.
+
+	spA changed to support internal flag, indicating if we talk about
+	expression or environment.
+
+	 in DRA, size of frame was multiplied by two because an Expr is
+	 two pointers!
+
+	* exec.cpp: MOV_P_INSN was fixed to _unary_exec(PTR,)
+	instead of _unary_exec(int,);
+
+	* unassembled.h: added support for frame analysis and relative
+	label for GTE.
+
+2003-02-13  Luc Moreau  <L.Moreau@ecs.soton.ac.uk>
+
+	* unassembled.h: DRA and DRB become binary, and need to indicate
+	as a second argument what the new frame becomes after dropping the
+	current frame.
+
+	Handling case statement: need to define the semantics precisely.
+	What if there is no match? I we falling off the case statement?
+	It would mean that there is one more instruction to handle!
+
+
+	long_emit: changed is Lab: when label is relative, compute the
+	offset!

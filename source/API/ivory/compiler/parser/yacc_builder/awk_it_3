@@ -1,0 +1,7 @@
+# yacc_builder/awk_it_3
+$1 == "Non-terminal" {
+    print "\"" $3 "\","; next
+}
+$1 == "Terminal" || $1 == "Pseudo-terminal" || $1 == "Monadic" || $1 == "Dyadic" {
+    print "\"" $4 "\","; next
+}

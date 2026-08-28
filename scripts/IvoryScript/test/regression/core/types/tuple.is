@@ -1,0 +1,9 @@
+show (fst (1, 2));                           show '\n';
+show (snd (1, 2));                           show '\n';
+show (fst ("hello", 42));                    show '\n';
+show (snd ("hello", 42));                    show '\n';
+show (fst3 (1, 2, 3));                       show '\n';
+show (snd3 (1, 2, 3));                       show '\n';
+show (thd3 (1, 2, 3));                       show '\n';
+let p :: (Int, Int) = (10, 20) in {
+   show (fst p); show " "; show (snd p) };   show '\n';

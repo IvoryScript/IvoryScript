@@ -1,0 +1,10 @@
+-- An interactive script to compute the area of a triangle
+-- User input submitted with 'Enter'
+
+let {
+   a :: Double = {show "Side a: "; fetch};
+   b :: Double = {show "Side b: "; fetch};
+   c :: Double = {show "Side c: "; fetch};
+   s :: Double = (a + b + c) / 2
+} in
+   {show "\nArea = "; sqrt (s * (s - a) * (s - b) * (s - c))}

@@ -1,0 +1,6 @@
+show (hd [1, 2, 3]);             show '\n';
+show (tail [1, 2, 3]);           show '\n';
+show (length [1, 2, 3]);         show '\n';
+show (length ([] :: [Int]));     show '\n';
+show (hd ["a", "b", "c"]);       show '\n';
+show (length [1, 2, 3, 4, 5]);   show '\n';

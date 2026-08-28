@@ -1,0 +1,7 @@
+show (lengthString "");                  show '\n';
+show (lengthString "hello");             show '\n';
+show (concatString "foo" "bar");         show '\n';
+show (reverseString "hello");            show '\n';
+show (substring "abcde" 1 3);            show '\n';
+show (getAtString "hello" 0);            show '\n';
+show (getAtString "hello" 4);            show '\n';

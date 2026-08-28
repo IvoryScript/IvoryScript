@@ -1,0 +1,149 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory Any (generic) type implementation
+--
+-- Date: 25 October 2003
+--
+-- T.B.D. Consider 'stringify' type method instead of show?
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+   module Any where {
+
+   type Any = Any a;
+
+   {-
+   Any :: a -> (Type, (Ptr a));
+   inline Any x = (typeOf x, ¬^(#!(Ptr x)))
+   matching {inline #!(\anyRepr -> case anyRepr of {(#::a, Ptr (x::a)) -> x})};
+   -}
+   
+   Any :: a -> (Type, (Ptr Extant));
+   inline Any x = (typeOf x, ¬^((castPtr (Ptr x))::Ptr Extant))
+   matching {inline #!(\anyRepr -> case anyRepr of {(#::a, ptrX) -> #!(case #!(castPtr ptrX) of  { Ptr (x :: a) -> x })})};
+   --matching {inline #!(\anyRepr -> case anyRepr of {(#::a, ptrX) -> #!(case #!((castPtr::(Ptr Extant -> Ptr a)) ptrX) of  { Ptr (x :: a) -> x })})};
+
+   {- Note that (for reasons of efficiency) all 'Any' patterns are transformed as follows:
+
+      Any (p :: a) -> alt => ~Any (#::a, ptrX) -> #!(case #!((castPtr::(Ptr Extant -> Ptr a)) ptrX) of { Ptr p -> alt })
+
+      This avoids a duplicate test on type if the selector function were to be used.
+   -}
+
+
+
+
+   {-
+
+   -- ImmediateAny is a primitive generic constructor and pattern match
+   -- for values of any type with a short representation
+
+   -- Typically permits direct representation of values up to (sizeOf Double)
+
+   -- ImmediateAny :: a -> ImmediateAny
+   -- ImmediateAny x :: a -> x;
+
+   type AnyRepr = ImmediateAny a | IndirectAny a;
+
+   IndirectAny :: a -> (Ptr a);
+   inline IndirectAny x = Ptr (¬^x);
+   matching {inline #!(\anyRepr -> case anyRepr of {Ptr (x::a) -> x})};
+
+   Any :: a -> (Type, AnyRepr);
+   inline Any x = (typeOf x,
+                   let xMapped :: a = mapToEnv x consEnv
+                      if sizeOf x <= sizeOf ImmediateAny then
+                         ¬^#!(ImmediateAny xMapped)
+                      else
+                         ¬^#!(IndirectAny xMapped))
+   matching {inline #!(\repr ->
+       case repr of {(#::a, anyRepr) ->
+          case anyRepr of {
+             ImmediateAny x -> x;
+             IndirectAny  x -> x;
+          }
+      }
+   };
+
+   -}
+
+   
+   typeOfAny :: Any -> Type;
+   inline typeOfAny x = case x of { ~Any (t :: Type, _ :: Ptr Extant) -> t };
+   
+   subordinate instance StrictCast c, Any | !c, c ¬= Void, c ¬= Any  where {
+      inline strictCast x = Any (¬::x)
+   };
+
+   subordinate instance StrictCast Any, c | c ¬= Void where {
+      inline strictCast any = #!(case any of {Any (x::c) -> x})
+   };
+
+   --mapAnyPtr :: * -> Env -> Ptr a;
+   instance Env Any where {
+      inline needsEnv x = True;  
+      inline mapToEnv any env =
+        ~Any (¬^(#!(mapToEnv (typeOfAny any) env)), ¬^(#!(mapAnyPtr any env)))
+   };
+
+   --primitive markAny_GC :: Any -> Void;
+
+   instance Mark_GC Ptr Extant;
+
+
+   instance Mark_GC Any where {
+      inline mark_GC = markAny_GC;
+   };
+   
+   subordinate instance Show Any where {
+      inline show = showAny;
+   };
+
+   --primitive insertTxtAny :: OutputStream Char -> Any -> Void;
+   subordinate instance StreamInsert OutputStream Char, Any where {
+      inline insert = insertTxtAny
+   };
+
+   
+   instance StreamExtract InputStream Byte, Any where {
+      inline extract is = 
+         let
+            t :: Type = #!(extract is)
+         in
+            ~Any #!(¬^t, ¬^((extractBinAnyPtr is t) :: Ptr Extant))
+   };
+
+   instance StreamInsert OutputStream Byte, Any where {
+      inline insert os any = {
+         insert os #!(typeOfAny any);
+         insertBinAnyPtr os any
+      }
+   };
+   
+   --anyType::Type;
+   --anyType = #::Any;
+
+   }

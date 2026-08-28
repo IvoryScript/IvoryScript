@@ -1,0 +1,18 @@
+
+let ps = PropertySet [x: 10, y: 20] in {
+    show ps;      show '\n';
+    show (ps.x);  show '\n';
+    show (ps.y);  show '\n'
+};
+
+let ps = PropertySet [name: "point", coords: (#3, #4)] in {
+    show (ps.name);           show '\n';
+    show (fst (ps.coords::(Int, Int)));   show '\n';
+    show (snd (ps.coords::(Int, Int)));   show '\n'
+};
+
+let ps :: PropertySet = PropertySet [x: 20, y: 30] in
+case ps of { PropertySet props -> {
+    show (typeOf props); show '\n';
+    show props;          show '\n'
+}};

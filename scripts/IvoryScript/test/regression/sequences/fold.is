@@ -1,0 +1,6 @@
+show (foldl (+) 0 [1, 2, 3, 4, 5]);                   show '\n';
+show (foldl (*) 1 [1, 2, 3, 4, 5]);                   show '\n';
+show (foldl (+) 0 []);                                show '\n';
+show (foldr (+) 0 [1, 2, 3, 4, 5]);                   show '\n';
+show (foldl max 0 [3, 1, 9, 1, 5, 4]);                show '\n';
+show (foldl (\acc x -> acc ++ [x * 2]) [] [1, 2, 3]); show '\n';

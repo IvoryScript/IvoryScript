@@ -1,0 +1,30 @@
+-- Sequential recursive initialisation negative analysis test.
+--
+-- Expected analyser trace:
+-- Rec decision: a[0] -> b[1] reserves b (forward value)
+-- Rec init: b -> invalid (forward value)
+-- Rec decision: e[4] -> e[4] reserves e (self)
+-- Rec init: e -> invalid (self)
+-- Rec summary: a[0] direct
+-- Rec summary: b[1] invalid (forward value)
+-- Rec summary: c[2] direct
+-- Rec summary: d[3] direct
+-- Rec summary: e[4] invalid (self)
+--
+-- Expected analysis diagnostics:
+-- Analysis error: Recursive initialisation of 'b' requires an expression or function type
+-- Analysis error: Recursive initialisation of 'e' requires an expression or function type
+--
+-- Add traceRecEdges to include raw Rec edge lines.
+
+let {
+   a :: Int = b + 1;   -- Later value reference: reserve b.
+   b :: Int = 10;
+
+   c :: Int = 1;
+   d :: Int = c + 1;   -- Earlier value reference: do not reserve c.
+
+   e :: Int = e + 1;   -- Self value reference: reserve e.
+} in {
+   show "..."
+}

@@ -1,0 +1,49 @@
+%{
+#include <stdlib.h>
+#include "ivory/bits.h"
+#include "ivory/compiler/parser.h"
+#define YY_NO_UNISTD_H 1
+#define input() yyinput()
+%}
+%option never-interactive
+%option noyywrap
+%option yylineno
+%x incl
+%x str
+%x cmd
+%{
+#define MAX_INCLUDE_DEPTH 10
+#define MAX_STR_CONST 65535
+#define LEX_EOF 0
+YY_BUFFER_STATE bufferStack[MAX_INCLUDE_DEPTH];
+char* fileNameStack[MAX_INCLUDE_DEPTH];
+FILE* fileStack[MAX_INCLUDE_DEPTH];
+int lineNoStack[MAX_INCLUDE_DEPTH];
+int stackPtr = 0;
+char string_buf[MAX_STR_CONST];
+char *string_buf_ptr;
+char escapeSeq(char c){
+switch (c){
+case 'a': return '\a';
+case 'b': return '\b';
+case 'e': return '\e';
+case 'f': return '\f';
+case 'n': return '\n';      
+case 'r': return '\r';
+case 't': return '\t';
+case 'v': return '\v';
+case '\\':return '\\';
+case '\'':return '\'';
+case '"': return '"';
+case '?': return '?';
+default:return '\0';}}
+%}
+
+DIGIT       [0-9]
+HEXDIG      [0-9a-fA-f]
+UC_NAME     [A-Z][A-Za-z0-9'_]*
+LC_NAME     [a-z][A-Za-z0-9'_]*
+ESCAPE      [ntvbrfa\\?'"]
+
+ANY         .
+%%

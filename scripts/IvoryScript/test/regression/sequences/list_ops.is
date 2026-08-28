@@ -1,0 +1,9 @@
+show (take 3 [1, 2, 3, 4, 5]);      show '\n';
+show (take 0 [1, 2, 3]);            show '\n';
+show (take 5 [1, 2, 3]);            show '\n';
+show (drop 2 [1, 2, 3, 4, 5]);      show '\n';
+show (drop 0 [1, 2, 3]);            show '\n';
+show (drop 5 [1, 2, 3]);            show '\n';
+show (reverse [1, 2, 3, 4, 5]);     show '\n';
+show (reverse ([] :: [Int]));       show '\n';
+show ([1, 2] ++ [3, 4]);            show '\n';

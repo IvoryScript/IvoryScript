@@ -1,0 +1,115 @@
+--compile code <filename> parser="printAST"
+--compile code <filename> tran="pass=1 trace"
+--compile code <filename> target="trace code gen"
+--compile code <filename> target="trace code gen probe=nnn"
+--compile bytes <filename> target="maxPeep=0" 
+--compile bytes <filename> typeCheck="trace"
+--compile bytes <filename> typeCheck="trace constraintProbe=nnn"
+--compile bytes <filename> typeCheck="trace inferProbe=nnn"
+--compile bytes <filename> typeCheck="substs" tran="pass=2 trace printAST"
+--compile bytes <filename> typeCheck="constraintProbe=nnn substs" tran="pass=2 printAST"
+--compile bytes <filename> typeCheck="substs" tran="pass=2 printAST"
+--compile bytes <filename> analyse="trace"
+--compile bytes <filename> target="trace code gen bytes iCode probe=nnn" 
+
+
+compile bytes modules/Prelude.is
+
+
+compile bytes modules/Tuple_4_10.is
+
+
+compile bytes modules/IO.is
+
+
+compile bytes modules/Serialisable.is
+
+
+compile bytes modules/Streams.is 
+
+
+compile bytes modules/Streams_Tuple_4_10.is
+
+
+compile bytes modules/Any.is 
+
+
+compile bytes modules/Binding.is 
+
+
+compile bytes modules/List.is 
+
+
+compile bytes modules/ListFunction.is
+
+
+compile bytes modules/StringList.is
+
+
+compile bytes modules/Tree.is 
+
+
+compile bytes modules/Array.is
+
+
+compile bytes modules/BasicVector.is
+
+
+compile bytes modules/Vector.is
+
+
+compile bytes modules/HashTable.is 
+
+
+compile bytes modules/HashTableFunction.is 
+
+
+compile bytes modules/NameAnyMap.is
+
+
+compile bytes modules/NameAnyMapFunction.is
+
+
+compile bytes modules/Property.is
+
+
+compile bytes modules/PropertySet.is
+
+
+compile bytes modules/MathConst.is
+
+
+compile bytes modules/Arith.is
+
+
+compile bytes modules/NumAggregate.is
+
+
+compile bytes modules/IntSeq.is
+
+
+compile bytes modules/Dir.is
+
+
+compile bytes modules/SimpleRoot.is
+
+
+compile bytes modules/TransientDataStore.is
+
+
+compile bytes modules/TransientStore.is
+
+
+compile bytes modules/TransientStoreFunction.is
+
+
+compile bytes modules/AnyNum.is
+
+
+compile bytes modules/AnySeq.is
+
+
+compile bytes modules/AnyBindingSet.is
+
+
+compile bytes test/devel/workInProgress.is

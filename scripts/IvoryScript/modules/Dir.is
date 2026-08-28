@@ -1,0 +1,83 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory Directory and file functions
+--
+-- Date: 25 October 2003
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module Dir where {
+
+-- types Dir and DirEnt are primitive
+
+dir :: String -> Exp [String];
+
+-- Note: list evaluation is lazy, so the 'Dir' handle will not be closed
+-- if the list is not fully consumed.
+
+dir pathName =
+   let (contents :: Dir -> Exp [String]) dir =
+      let next :: Maybe DirEntry = nextDirEntry dir
+      in
+         case next of {
+            Nothing -> {closeDir dir; #![]};
+            Just entry -> (dirEntryName entry) :+ (contents dir)
+         }
+   in
+      let dirOrNothing :: (Maybe Dir) = openDir pathName
+      in 
+         case dirOrNothing of {
+            Nothing -> [];
+            Just dir -> contents dir
+         };
+ 
+ -- T.B.D. Raise exception unless same environment
+
+instance Env DirEntry;
+ 
+instance Mark_GC DirEntry;
+
+instance Env Dir;
+ 
+instance Mark_GC Dir;
+
+instance StreamExtract InputStream Byte, Dir where {
+   extract is = #!(error "'extract' invalid for Dir")
+};
+
+instance StreamInsert OutputStream Byte, Dir where {
+   insert os dir = error "'insert' invalid for Dir"
+};
+
+instance StreamExtract InputStream Byte, DirEntry where {
+   extract is = #!(error "'extract' invalid for DirEntry")
+};
+
+instance StreamInsert OutputStream Byte, DirEntry where {
+   insert os dirEntry = error "'insert' invalid for DirEntry"
+};
+
+}

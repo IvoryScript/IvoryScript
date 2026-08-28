@@ -1,0 +1,15 @@
+show (id 42);                                              show '\n';
+show (id "hello");                                         show '\n';
+show (compose (\x -> x + 1) (\x -> x * 2) 3);             show '\n';
+show (compose length reverse "hello");                     show '\n';
+let { double :: Int -> Int = \x -> x * 2; inc :: Int -> Int = \x -> x + 1 } in
+    show (compose double inc 5);                           show '\n';
+show (mapf (compose (\x -> x + 1) (\x -> x * 2)) [1, 2, 3]); show '\n';
+
+let {
+    fact :: Int -> Int -> Int;
+    fact = fix (\(rec :: Int -> Int -> Int) (n :: Int) (acc :: Int) ->
+        if n = 0 then acc else rec (n - 1) (acc * n))
+} in
+    fact 5 1
+    

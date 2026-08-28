@@ -1,0 +1,268 @@
+Terminal	001	L_MODULE	module
+Terminal	002	L_DEF	def	BEGIN(cmd); return L_DEF;
+Terminal	003	L_WITH	with
+Terminal	004	L_WHERE	where
+Terminal	005	L_UNDEF	undef	BEGIN(cmd); return L_UNDEF;
+Terminal	006	L_DO	do
+Terminal	007	L_IF	if
+Terminal	008	L_THEN	then
+Terminal	009	L_ELSE	else
+Terminal	010	L_CASE	case
+Terminal	011	L_OF	of	enterPendingArrowContext(); return L_OF;
+Terminal	012	L_OTHERWISE	otherwise
+Terminal	013	L_LET	let
+Terminal	014	L_IN	in
+Terminal	015	L_RETURN	return
+Terminal	016	L_THIS	this
+Terminal	017	L_INLINE	inline
+Terminal	018	L_TAG	TAG
+Terminal	019	L_SEMICOLON	;
+Terminal	020	L_LSQB	[
+Terminal	021	L_RSQB	]
+Terminal	022	L_LPAREN	(
+Terminal	023	L_RPAREN	)
+Terminal	024	L_LCURLYB	{
+Pseudo-terminal	025	L_CMD_LCURLYB	{
+Terminal	026	L_RCURLYB	}
+Terminal	027	L_BACKSLASH	\\	enterPendingArrowContext(); return L_BACKSLASH;
+Terminal	028	L_COLON_EQ	:=
+Terminal	029	L_AT_EQ	@=
+Terminal	030	L_LT_HYPHEN	<-
+Terminal	031	L_EXCLMARK	!
+Terminal	032	L_NUMSIGN_EXCLMARK	#!
+Terminal	033	L_COMMA	,
+Terminal	034	L_UNDERSCORE	_
+Terminal	035	L_COLON_COLON	::	enterTypeSigContext(); return L_COLON_COLON;
+Monadic	036	L_PREFIX_COLON_COLON	::
+Terminal	037	L_NOTSIGN_COLON_COLON	¬::
+Terminal	038	L_AMPERSAND	&
+Terminal	039	L_VERTBAR	|
+Terminal	040	L_HYPHEN_GT	->	if (pendingArrowContext()) { if (typeSigContext()) return L_TYPESIG_HYPHEN_GT; else { exitPendingArrowContext(); return L_HYPHEN_GT;} } else return L_TYPESIG_HYPHEN_GT;
+Pseudo-terminal	041	L_TYPESIG_HYPHEN_GT	->
+Monadic	042	L_PREFIX_TYPESIG_HYPHEN_GT	->
+Terminal	043	L_LT_LT	<<
+Terminal	044	L_GT_GT	>>
+Terminal	045	L_NOTSIGN	¬
+Terminal	046	L_NOT	not
+Terminal	047	L_AND	and
+Terminal	048	L_OR	or
+Terminal	049	L_NUMSIGN_AMPERSAND	#&
+Terminal	050	L_NUMSIGN_VERTBAR	#|
+Terminal	051	L_NUMSIGN_CARET	#^
+Terminal	052	L_NUMSIGN_NOTSIGN	#¬
+Terminal	053	L_LT	<
+Terminal	054	L_LT_EQ	<=
+Terminal	055	L_EQ	=
+Pseudo-terminal	056	L_DEF_EQ	=
+Terminal	057	L_NOTSIGN_EQ	¬=
+Terminal	058	L_GT_EQ	>=
+Terminal	059	L_GT	>
+Terminal	060	L_DOT	.
+Monadic	061	L_PREFIX_DOT	.
+Terminal	062	L_COLON	:
+Terminal	063	L_COLON_PLUS	:+
+Terminal	064	L_PLUS_PLUS	++
+Terminal	065	L_PLUS	+
+Monadic	066	L_PREFIX_PLUS	+
+Terminal	067	L_HYPHEN	-
+Monadic	068	L_PREFIX_HYPHEN	-
+Terminal	069	L_ASTERISK	*	return typeSigContext() ? L_TYPESIG_ASTERISK : L_ASTERISK;
+Pseudo-terminal	070	L_TYPESIG_ASTERISK	*
+Terminal	071	L_SLASH	/
+Terminal	072	L_DIV	div
+Terminal	073	L_MOD	mod
+Terminal	074	L_CARET	^
+Monadic	075	L_PREFIX_CARET	^
+Terminal	076	L_LPAREN_CARET_RPAREN	(^)
+Terminal	077	L_NOTSIGN_CARET	¬^
+Terminal	078	L_NUMSIGN	#
+Terminal	079	L_NUMSIGN_NUMSIGN	##
+Terminal	080	L_NUMSIGN_COLON_COLON	#::	enterTypeSigContext(); return L_NUMSIGN_COLON_COLON;
+Terminal	081	L_NUMSIGN_AT	#@
+Terminal	082	L_AT	@
+Terminal	083	L_EQ_GT	=>
+Terminal	084	L_TILDE	~
+Terminal	085	L_TILDE_TILDE	~~
+Terminal	086	L_TILDE_AT	~@
+Terminal	087	L_TYPE	type
+Terminal	088	L_OBJECT	object
+Terminal	089	L_CLASS	class	enterTypeSigContext(); return L_CLASS;
+Terminal	090	L_PRIMITIVE	primitive
+Terminal	091	L_INSTANCE	instance	enterTypeSigContext(); return L_INSTANCE;
+Terminal	092	L_SUBORDINATE	subordinate
+Terminal	093	L_CONSTANT	constant
+Terminal	094	L_VARIABLE	variable
+Terminal	095	L_INDISPENSABLE	indispensable
+Terminal	096	L_DYNAMIC	dynamic
+Terminal	097	L_TRANSIENT	transient
+Terminal	098	L_PERSIST	persistent
+Terminal	099	L_PRIVATE	private
+Terminal	100	L_PUBLIC	public
+Terminal	101	L_MATCHING	matching
+Terminal	102	L_PTR	Ptr
+Pseudo-terminal	103	<_string> L_UC_NAME	UC_NAME
+Pseudo-terminal	104	<_string> L_LC_NAME	LC_NAME
+Pseudo-terminal	105	<_int> L_INTEGER	INTEGER
+Pseudo-terminal	106	<_bits> L_HEX	HEX
+Pseudo-terminal	107	<_double> L_FIXED	FIXED
+Pseudo-terminal	108	<_char> L_CHAR	CHAR
+Pseudo-terminal	109	<_string> L_STRING	STRING
+Non-terminal	110	script
+Non-terminal	111	module
+Non-terminal	112	sequence
+Non-terminal	113	modDeclOrDefnBody
+Non-terminal	114	modDeclOrDefns
+Non-terminal	115	modDeclOrDefnList
+Non-terminal	116	modDeclOrDefn
+Non-terminal	117	dynTypeDefn
+Non-terminal	118	typeDefn
+Non-terminal	119	objectDefn
+Non-terminal	120	classDefn
+Non-terminal	121	genClass
+Non-terminal	122	classOrList
+Non-terminal	123	bracketedClassList
+Non-terminal	124	bracketedClassOrList
+Non-terminal	125	bracketedClassListTail
+Non-terminal	126	bracketedClass
+Non-terminal	127	class
+Non-terminal	128	classDeclOrDefnBody
+Non-terminal	129	classDeclOrDefnList
+Non-terminal	130	classDeclOrDefn
+Non-terminal	131	instanceDefn
+Non-terminal	132	instanceDefnTypes
+Non-terminal	133	optInstanceDeclOrDefnBody
+Non-terminal	134	instanceDeclOrDefnBody
+Non-terminal	135	instanceDeclOrDefnList
+Non-terminal	136	instanceDeclOrDefn
+Non-terminal	137	dataConDecl
+Non-terminal	138	modifiedDataConDefn
+Non-terminal	139	dataConDefn
+Non-terminal	140	selectors
+Non-terminal	141	selectorBody
+Non-terminal	142	selectorList
+Non-terminal	143	selector
+Non-terminal	144	declOrDefnBody
+Non-terminal	145	declOrDefnList
+Non-terminal	146	declOrDefn
+Non-terminal	147	primDecl
+Non-terminal	148	decl
+Non-terminal	149	modifiedDefn
+Non-terminal	150	defn
+Non-terminal	151	defCmdBody
+Non-terminal	152	defCmdList
+Non-terminal	153	defCmd
+Non-terminal	154	undefCmdBody
+Non-terminal	155	undefCmdList
+Non-terminal	156	undefCmd
+Non-terminal	157	patterns
+Non-terminal	158	patternList
+Non-terminal	159	pattern
+Non-terminal	160	binPattern
+Non-terminal	161	plainPattern
+Non-terminal	162	tuplePtrDeconPattern
+Non-terminal	163	tuplePattern
+Non-terminal	164	patternComps
+Non-terminal	165	ptrPattern
+Non-terminal	166	dataConPtrDeconPattern
+Non-terminal	167	dataConPattern
+Non-terminal	168	concretePattern
+Non-terminal	169	constrainedPattern
+Non-terminal	170	varPattern
+Non-terminal	171	aPattern
+Non-terminal	172	typeConstraint
+Non-terminal	173	binTypeSig
+Non-terminal	174	monTypeSig
+Non-terminal	175	apTypeSig
+Non-terminal	176	typeSig
+Non-terminal	177	aTypeSig
+Non-terminal	178	typeSigCompList
+Non-terminal	179	typeSigCSList
+Non-terminal	180	typeQuals
+Non-terminal	181	typeQualOrList
+Non-terminal	182	bTypeQualList
+Non-terminal	183	bTypeQualOrList
+Non-terminal	184	bTypeQualListTail
+Non-terminal	185	typeQual
+Non-terminal	186	dyadicTypeQual
+Non-terminal	187	monadicTypeQual
+Non-terminal	188	instanceTypeQual
+Non-terminal	189	bTypeQual
+Non-terminal	190	aTypeQual
+Non-terminal	191	predRelOp
+Non-terminal	192	predAndOp
+Non-terminal	193	predAndAlts
+Non-terminal	194	predOrOp
+Non-terminal	195	predOrAlts
+Non-terminal	196	predNotOp
+Non-terminal	197	predNotAlts
+Non-terminal	198	dataDecls
+Non-terminal	199	dataDecl
+Non-terminal	200	aTypeSigs
+Non-terminal	201	aTypeSigList
+Non-terminal	202	retExpr
+Non-terminal	203	defExpr
+Non-terminal	204	undefExpr
+Non-terminal	205	seqExpr
+Non-terminal	206	expr
+Non-terminal	207	genExpr
+Non-terminal	208	apExpr
+Non-terminal	209	binExpr
+Non-terminal	210	monExpr
+Non-terminal	211	specialExpr
+Non-terminal	212	sel
+Non-terminal	213	selExpr
+Non-terminal	214	selDataCon
+Non-terminal	215	bExpr
+Non-terminal	216	aExpr
+Non-terminal	217	prefixOp
+Non-terminal	218	selOp
+Non-terminal	219	expOp
+Non-terminal	220	mulDivOp
+Non-terminal	221	concatOp
+Non-terminal	222	addSubOp
+Non-terminal	223	relOp
+Non-terminal	224	logAndOp
+Non-terminal	225	logAndAlts
+Non-terminal	226	logOrOp
+Non-terminal	227	logOrAlts
+Non-terminal	228	shiftOp
+Non-terminal	229	bitAndOp
+Non-terminal	230	bitXorOp
+Non-terminal	231	bitOrOp
+Non-terminal	232	assignOp
+Non-terminal	233	dyadicOp
+Non-terminal	234	notOp
+Non-terminal	235	notAlts
+Non-terminal	236	bitwiseNotOp
+Non-terminal	237	dePtrOp
+Non-terminal	238	monadicOp
+Non-terminal	239	exprs
+Non-terminal	240	exprList
+Non-terminal	241	compList
+Non-terminal	242	caseAltList
+Non-terminal	243	caseAlt
+Non-terminal	244	casePatternList
+Non-terminal	245	casePattern
+Non-terminal	246	qual
+Non-terminal	247	qualList
+Non-terminal	248	typeVars
+Non-terminal	249	typeVarList
+Non-terminal	250	idOrPrefixOp
+Non-terminal	251	bracketedSignedId
+Non-terminal	252	signedId
+Non-terminal	253	idName
+Non-terminal	254	name
+Non-terminal	255	wildcard
+Non-terminal	256	modifier
+Non-terminal	257	attribute
+Non-terminal	258	modId
+Non-terminal	259	typeCon
+Non-terminal	260	tag
+Non-terminal	261	dataCon
+Non-terminal	262	ptr
+Non-terminal	263	classId
+Non-terminal	264	typeVar
+Non-terminal	265	atom
+Non-terminal	266	const
+Non-terminal	267	semiSeq
+Non-terminal	268	optSemi

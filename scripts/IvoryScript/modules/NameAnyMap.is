@@ -1,0 +1,108 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory Name/Any map
+--
+-- Date: 25 October 2003
+--
+-- Description:
+--
+--    Implements a map from names to values of type Any
+--    using a hash table.
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module NameAnyMap where {
+
+type NameAnyMap = NameAnyMap Int;
+NameAnyMap :: Int -> HashTable Name Any;
+NameAnyMap nSlots = HashTable nSlots;
+
+-- NameAnyMap instance of Mark_GC
+
+-- T.B.D. investigate code generation falure
+-- if 'Mark_GC' instance appears after 'Env' instance
+
+instance Mark_GC NameAnyMap where {
+   mark_GC map =
+      case map of { ~NameAnyMap ht -> mark_GC ht }
+};
+
+-- NameAnyMap instance of Env
+
+instance Env NameAnyMap where {
+   inline needsEnv map = True;  
+   mapToEnv map env =
+      case map of { ~NameAnyMap ht -> ~NameAnyMap #!(mapToEnv ht env) }
+};
+
+-- NameAnyMap instance of BindingSet
+
+instance BindingSet NameAnyMap, Name, Any where {
+   addBinding map n v =
+      case map of { ~NameAnyMap ht -> hashTableAdd ht (hashName n) n v};
+   hasBinding map n =
+      case map of { ~NameAnyMap ht -> hashTableHas ht (hashName n) n};
+   removeBinding map n =
+      case map of { ~NameAnyMap ht -> hashTableRemove ht (hashName n) n};
+};
+
+-- NameAnyMap instance of Show
+
+instance Show NameAnyMap where {
+   show map = case map of { ~NameAnyMap ht -> show ht}
+};
+
+-- OutputStream Char, NameAnyMap instance of StreamInsert 
+
+instance StreamInsert OutputStream Char, NameAnyMap where {
+   insert os map = case map of { ~NameAnyMap ht -> insert os ht }
+};
+
+-- NameAnyMap instance of Select
+
+instance Select NameAnyMap, Any where {
+   (.) map name =
+      case map of { ~NameAnyMap ht ->
+         case hashTableGet ht (hashName name) name of {
+            Just x ->  x;
+            Nothing -> error "Select: name absent"
+         }
+      }
+};
+
+-- InputStream Byte, NameAnyMap instance of StreamExtract 
+
+instance StreamExtract InputStream Byte, NameAnyMap where {
+   extract is = ~NameAnyMap #!(extract is)
+};
+
+-- OutputStream Byte, NameAnyMap instance of StreamInsert 
+
+instance StreamInsert OutputStream Byte, NameAnyMap where {
+   insert os map = case map of { ~NameAnyMap ht -> insert os ht }
+};
+
+}

@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommandArguments>config\ivory\suites\test.suite data\ivory\logs\test.log</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>..\..\..\..\..</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArgumentsHistory>config\ivory\suites\test.suite data\ivory\logs\test.log&gt; data/ivory/logs/code |config\ivory\suites\test.suite data\ivory\logs\test.log&gt; data/ivory/logs/trace|config\ivory\suites\test.suite data\ivory\logs\test.log &gt; data/ivory/logs/trace|config\ivory\suites\test.suite data\ivory\logs\test.log &gt; data/ivory/logs/code|config\ivory\suites\test.suite data\ivory\logs\test.log|</LocalDebuggerCommandArgumentsHistory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LocalDebuggerCommandArguments>config\ivory\suites\regression.suite data\ivory\logs\regression.log </LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerWorkingDirectory>..\..\..\..\..</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArgumentsHistory>config\ivory\suites\regression.suite data\ivory\logs\test.log|config\ivory\suites\regression.suite data\ivory\logs\test.log &gt;data/ivory/logs/trace|config\ivory\suites\regression.suite data\ivory\logs\test.log |config\ivory\suites\test.suite data\ivory\logs\test.log |config\ivory\suites\regression.suite data\ivory\logs\regression.log |</LocalDebuggerCommandArgumentsHistory>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,1 @@
+awk -F'\t' -v OFS='\t' '{ $2 = sprintf("%03d", NR); print }' tables.txt

@@ -1,0 +1,2 @@
+/* Symbols repesented by strings, at index+1000 */
+const char * const lex_names[] = {

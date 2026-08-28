@@ -1,0 +1,5 @@
+show "";             show '\n';
+show "hello";        show '\n';
+show "line1\nline2"; show '\n';
+show "tab\there";    show '\n';
+show "quote: \"";    show '\n';

@@ -1,0 +1,9 @@
+-- "Hello, world" and String/Char conversions
+
+"Hello, world";
+chars "Hello, world";
+string ['H','e','l','l','o',',',' ','w','o','r','l','d'];
+
+typeOf "Hello, world";
+typeOf (chars "Hello, world");
+typeOf (string ['H','e','l','l','o',',',' ','w','o','r','l','d']);

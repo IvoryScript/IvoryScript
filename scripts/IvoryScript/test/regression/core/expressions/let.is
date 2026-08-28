@@ -1,0 +1,6 @@
+let x = 42 in show x;                              show '\n';
+let s = "hello" in show s;                          show '\n';
+let x = 3 in let y = 4 in show (x + y);            show '\n';
+let n = 10 in show (n * n);                         show '\n';
+let x = 2.0 in let y = 3.0 in show (x ^ y);        show '\n';
+let s = "world" in show (lengthString s);           show '\n';

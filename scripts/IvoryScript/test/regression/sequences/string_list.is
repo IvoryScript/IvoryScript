@@ -1,0 +1,8 @@
+show (chars "Hello");                                          show '\n';
+show (length (chars "Hello"));                                 show '\n';
+show (reverse (chars "Hello"));                                show '\n';
+show (string (chars "hello"));                                 show '\n';
+show (string (reverse (chars "stressed")));                    show '\n';
+show (filter (\c -> c ¬= 'l') (chars "Hello"));                show '\n';
+show (string (filter (\c -> c = 'a' | c = 'e' | c = 'i' | c = 'o' | c = 'u')
+                     (chars "IvoryScript")));                   show '\n';

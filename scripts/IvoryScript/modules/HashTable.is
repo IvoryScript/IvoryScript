@@ -1,0 +1,602 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory Hash Table
+--
+-- Date: 25 October 2003
+--
+-- Usage:
+--
+--    HashTable k
+--
+-- Description:
+--
+--    Implements a conventional type to map keys to values using an array
+--    of k slots each comprising a chain of nodes.
+--
+-------------------------------------------------------------------------------
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+
+module HashTable where {
+
+type HashTableEntry keyType valType = HashTableEntry (Ptr (HashTableEntry keyType valType)) keyType valType; 
+type HashTable keyType valType = HashTable Int;
+
+-- Slot chain node
+
+HashTableEntry :: Ptr (HashTableEntry keyType valType) ->
+                  keyType ->
+                  valType ->
+                  (Ptr (HashTableEntry keyType valType), keyType, valType);
+inline HashTableEntry next key val = (¬^next, key, val) matching {
+   inline fst3;
+   inline snd3;
+   inline thd3
+};
+
+-- Helper function for destructive update of a node chain link
+
+setHashTableEntryNext :: Ptr (HashTableEntry keyType valType) -> Ptr (HashTableEntry keyType valType) -> Void;
+inline
+setHashTableEntryNext nxt nodePtr =
+   case nodePtr of { @HashTableEntry (@(nextPtr, _, _)) -> assignAtPrim ¬^nxt nextPtr };
+
+-- Hash Table Constructor
+
+HashTable :: Int -> (Int, Ptr (Array(Ptr (HashTableEntry keyType valType))));
+inline HashTable nSlots =
+   let slots :: Ptr (Array(Ptr (HashTableEntry keyType valType))) = #!(allocPtrArray nSlots)
+   in
+      let { clearFrom :: (Ptr (Array(Ptr (HashTableEntry keyType valType))) -> Int -> Int -> Void);
+            clearFrom slots nSlots i =
+               if i < nSlots then {
+                  putAtPtrArray slots i Null;
+                  clearFrom slots nSlots (i + 1)
+               }
+      } in {
+         clearFrom (slots::Ptr (Array(Ptr (HashTableEntry keyType valType))))  nSlots 0;
+         (nSlots, ¬^slots)
+      }
+matching {
+   inline fst
+};
+
+-- Access functions (mainly as a work-around for a GC issue with arrays of pointers)
+
+nHashTableSlots :: (HashTable keyType valType) -> Int;
+inline nHashTableSlots ht = case ht of {~HashTable repr -> fst repr};
+
+hashTableSlots :: (HashTable keyType valType) -> Ptr (Array(Ptr (HashTableEntry keyType valType)));
+inline hashTableSlots ht = case ht of {~HashTable repr -> snd repr};
+
+-- Helper function to search for a node with matching key in a slot chain
+
+findInHashTableSlot :: Ptr (HashTableEntry keyType valType) ->
+                       keyType ->
+                       Ptr (HashTableEntry keyType valType);
+inline
+findInHashTableSlot slots key  =
+   let { findInSlot :: Ptr (HashTableEntry keyType valType) ->
+                       keyType -> 
+                       Ptr (HashTableEntry keyType valType);
+         findInSlot nodePtr key =
+            case nodePtr of {
+               Ptr (HashTableEntry next k _) ->
+                  if k = key then nodePtr
+                             else findInSlot next key;
+               Null                          -> Null
+            }
+   } in
+      findInSlot slots key;
+
+
+-- hashTableGet: Return mapped value for a given key
+
+hashTableGet :: (HashTable keyType valType) -> Int -> keyType -> (Maybe valType);
+inline
+hashTableGet ht hashVal key  = 
+   case ht of {
+      ~HashTable repr ->
+         case findInHashTableSlot (getAtPtrArray (snd repr) (hashVal mod (fst repr))) key of {
+            Null ->                       Nothing;
+            Ptr (HashTableEntry _ _ v) -> Just v
+         }            
+   };
+
+
+-- hashTableHas: Return True if a given key is present
+
+hashTableHas :: (HashTable keyType valType) -> Int -> keyType -> Bool;
+inline
+hashTableHas ht hashVal key  = 
+   case ht of {
+      ~HashTable repr ->
+         case findInHashTableSlot (getAtPtrArray (snd repr) (hashVal mod (fst repr))) key of {
+            Null -> False;
+            Ptr _ -> True
+         }
+   };
+
+-- hashTableAdd:  Add a new key/value mapping
+-- Notes:
+-- 1) Both the key and value are mapped to the hash table environment.
+-- 2) The use of the helper function 'hashTableSlots' is to avoid
+--    a garbage collection issue for a 'Ptr (Array a)' type...
+
+hashTableAdd :: (HashTable keyType valType)-> Int -> keyType -> valType -> Void;
+inline
+hashTableAdd ht hashVal key val  = 
+   #!(case ht of {
+      ~HashTable repr ->
+         #!(let { index :: Int = hashVal mod (fst repr);
+               headEntryPtr :: Ptr (HashTableEntry keyType valType) = getAtPtrArray (snd repr) index;
+               nodePtr :: Ptr (HashTableEntry keyType valType) = findInHashTableSlot headEntryPtr key
+         } in 
+            case nodePtr of {
+               Ptr (HashTableEntry _ _ _) -> #!(error "HashTableAdd: key not unique");
+               (Null :: Ptr (HashTableEntry keyType valType)) ->
+                  #!(let env = consEnv in {
+                     setEnv (envOf ht);
+                     let np :: Ptr (HashTableEntry keyType valType) = (#!(Ptr ¬^(#!(HashTableEntry headEntryPtr key val))))
+                     in
+                        putAtPtrArray (#!(hashTableSlots ht)) index np;
+                     setEnv env
+                  })
+            })            
+   });
+
+
+-- hashTableRemove:  Remove an existing key/value mapping
+
+hashTableRemove :: (HashTable keyType valType) -> Int -> keyType -> Void;
+inline
+hashTableRemove ht hashVal key  = 
+   case ht of {
+      ~HashTable repr ->
+         let {
+            index :: Int = hashVal mod (fst repr);
+            slots :: Ptr (Array(Ptr (HashTableEntry keyType valType))) = snd repr;
+            removeFromSlot :: Ptr (Array(Ptr (HashTableEntry keyType valType))) ->
+                              Int -> 
+                              keyType ->
+                              Ptr (HashTableEntry keyType valType) ->
+                              Ptr (HashTableEntry keyType valType) ->
+                              Void;
+            removeFromSlot slots index key nodePtr prev =
+               case nodePtr of {
+                  Ptr (HashTableEntry next k v) ->
+                     if k = key then
+                        if prev = Null then
+                           putAtPtrArray slots index next
+                        else
+                           setHashTableEntryNext next prev
+                     else
+                        removeFromSlot slots index key next nodePtr;
+                  Null -> #!(error "hashTableRemove: key absent") }
+         } in
+            removeFromSlot slots index key (getAtPtrArray slots index) Null;
+   };
+
+
+-- class instances
+
+-- Slot chain node
+
+-- HashTableEntry instance of Env
+
+instance Env HashTableEntry keyType valType where {
+   inline needsEnv node = True;  
+   inline mapToEnv node env = case node of {
+      HashTableEntry next key val ->
+         HashTableEntry next key val
+   }
+};
+
+-- HashTableEntry instance of Show
+
+instance Show (HashTableEntry keyType valType) where {
+  inline show node = case node of { HashTableEntry (_::Ptr (HashTableEntry keyType valType)) key val -> {
+    show "HashTableEntry "; show key; show val; show '\n'} }
+};
+
+-- HashTable
+
+-- HashTable instance of Env
+
+instance Env (HashTable keyType valType) where {
+   inline needsEnv ht = True; 
+
+-- Note the use of the helper function 'hashTableSlots' to avoid
+-- a garbage collection issue with 'Ptr (Array a)' type...
+
+   inline mapToEnv htSrc dstEnv =
+      if (envOf htSrc) ¬= dstEnv then
+         let env = consEnv  
+         in {
+            setEnv dstEnv;
+            let {
+               nSlots :: Int = nHashTableSlots htSrc;
+               htDst :: (HashTable keyType valType) =
+                  ~HashTable (nSlots, ¬^(#!(allocPtrArray nSlots)));
+               clearFrom :: (Ptr (Array(Ptr (HashTableEntry keyType valType))) ->
+                            Int -> Int -> Void);      
+               clearFrom slots nSlots i =
+                  if i < nSlots then {
+                     putAtPtrArray slots i (#!Null);
+                     clearFrom slots nSlots (i + 1)
+                  };
+               mapChain :: Ptr (HashTableEntry keyType valType) ->
+                           Ptr (HashTableEntry keyType valType);
+               mapChain nodePtr =
+               case nodePtr of {
+                  Null -> Null;
+                  Ptr (HashTableEntry next k v) ->
+                     Ptr ¬^(#!(HashTableEntry (mapChain next) k v))
+               };
+               mapFrom :: HashTable keyType valType ->
+                          HashTable keyType valType ->
+                          Int -> Int -> Void;
+               mapFrom htSrc htDst nSlots i =
+                  if i < nSlots then
+                     putAtPtrArray (hashTableSlots htDst)
+                                   i
+                                   (mapChain (getAtPtrArray (hashTableSlots htSrc) i))
+            } in {
+               clearFrom (hashTableSlots htDst) nSlots 0;
+               mapFrom htSrc htDst nSlots 0;
+               setEnv env;
+               htDst
+            }
+         }
+      else
+         htSrc
+};
+
+markHashTableChain :: Ptr (HashTableEntry keyType valType) -> Void;
+inline markHashTableChain nodePtr =
+   let {
+      markHashTableChain_ :: Ptr (HashTableEntry keyType valType) -> Void;
+      markHashTableChain_ nodePtr =
+         if markPtr_GC nodePtr then
+            case nodePtr of {
+               Ptr (HashTableEntry next key val) -> {
+                  mark_GC key;
+                  mark_GC val;
+                  markHashTableChain_ next; 
+               }
+            }
+   } in
+      markHashTableChain_ nodePtr;
+     
+-- HashTableEntry instance of Mark_GC
+instance Mark_GC HashTableEntry keyType valType where {
+   inline mark_GC node = case node of {
+      HashTableEntry next key val -> {
+         mark_GC key;
+         mark_GC val;
+         markHashTableChain next;
+      }
+   }
+};
+
+-- HashTable instance of Mark_GC
+
+instance Mark_GC (HashTable keyType valType) where {
+   inline mark_GC ht = case ht of { ~HashTable repr ->
+      let { nSlots :: Int = fst repr;
+            slots :: Ptr (Array(Ptr (HashTableEntry keyType valType))) = snd repr;
+            markChain :: Ptr (HashTableEntry keyType valType) -> Void;
+            markChain nodePtr =
+               if markPtr_GC nodePtr then
+                  case nodePtr of {
+                     Ptr (HashTableEntry next key val) -> {
+                        mark_GC key;
+                        mark_GC val;
+                        markHashTableChain next; 
+                     }
+                  };
+            markFrom :: Ptr (Array(Ptr (HashTableEntry keyType valType))) ->
+                        Int -> Int -> Void;
+            markFrom slots nSlots i =
+               if i < nSlots then {
+                  mark_GC #!(getAtPtrArray slots i);
+                  markFrom slots nSlots (i + 1)
+               }
+      } in
+         if (markPtr_GC slots) then
+            markFrom slots nSlots 0;
+   }
+};
+
+-- HashTable instance of Show
+
+instance Show (HashTable keyType valType) where {
+   inline show ht = case ht of { ~HashTable repr ->
+      let { nSlots :: Int = fst repr;
+            slots :: Ptr (Array(Ptr (HashTableEntry keyType valType))) = snd repr;
+            showChain :: Ptr (HashTableEntry keyType valType) -> Int -> Void;
+            showChain nodePtr pos =
+               case nodePtr of {
+                  Ptr (HashTableEntry next k v) -> {
+                     if (pos > 0) then
+                        show ", ";
+                     show k; show ": "; show v;
+                     showChain next (pos + 1)
+                  };
+                  Null -> show ""
+               };
+            showFrom :: Ptr (Array(Ptr (HashTableEntry keyType valType))) -> Int -> Int -> Int -> Void;
+            showFrom slots nSlots n i =
+               if i < nSlots then {
+                  let nodePtr :: Ptr (HashTableEntry keyType valType) = (getAtPtrArray slots i)
+                  in
+                     if not (nodePtr = Null) then {
+                        if (n > 0) then
+                           show "\n  ";
+                        show i; show ") ";
+                        showChain nodePtr 0;
+                        showFrom slots nSlots (n + 1) (i + 1)
+                     } else
+                        showFrom slots nSlots n (i + 1)
+               } else
+                  show " ]"
+      } in {
+         show "[ ";
+         showFrom slots nSlots 0 0;
+      }
+   }
+};
+
+-- OutputStream Char, HashTable instance of StreamInsert
+
+instance StreamInsert OutputStream Char, (HashTable keyType valType) where {
+   inline insert os ht = case ht of { ~HashTable repr ->
+      let { nSlots :: Int = fst repr;
+            slots :: Ptr (Array(Ptr (HashTableEntry keyType valType))) = snd repr;
+            insertChain :: OutputStream Char -> Ptr (HashTableEntry keyType valType) -> Int -> Void;
+            insertChain os nodePtr pos =
+               case nodePtr of {
+                  Ptr (HashTableEntry next k v) -> {
+                     if (pos > 0) then
+                        show ", ";
+                     insert os k; insert os ": "; insert os v;
+                     insertChain os next (pos + 1)
+                  };
+                  Null -> show ""
+               };
+            insertFrom :: OutputStream Char -> Ptr (Array(Ptr (HashTableEntry keyType valType))) -> Int -> Int -> Int -> Void;
+            insertFrom os slots nSlots n i =
+               if i < nSlots then {
+                  let nodePtr :: Ptr (HashTableEntry keyType valType) = (getAtPtrArray slots i)
+                  in
+                     if not (nodePtr = Null) then {
+                        if (n > 0) then
+                           show "\n  ";
+                        insert os i; insert os ") ";
+                        insertChain os nodePtr 0;
+                        insertFrom os slots nSlots (n + 1) (i + 1)
+                     } else
+                        insertFrom os slots nSlots n (i + 1)
+               } else
+                  insert os " ]"
+      } in {
+         insert os "[ ";
+         insertFrom os slots nSlots 0 0;
+      }
+   }
+};
+
+-- InputStream Byte, HashTable instance of StreamExtract 
+
+instance StreamExtract InputStream Byte, HashTable keyType valType where {
+   inline extract (is :: InputStream Byte) =
+      let {      
+         nSlots :: Int =      #!(extract is);
+         slotsInUse :: Int =  #!(extract is);
+
+         slots  :: Ptr (Array (Ptr (HashTableEntry keyType valType))) = allocPtrArray nSlots;
+        
+         extractChain :: InputStream Byte -> Int -> Ptr (HashTableEntry keyType valType);
+         extractChain is n =
+            let {
+               extractTail :: InputStream Byte ->
+                              Int ->
+                              Int -> 
+                              Ptr (HashTableEntry keyType valType) ->
+                              Ptr (HashTableEntry keyType valType) ->
+                              Ptr (HashTableEntry keyType valType);
+               extractTail is n i prev head =
+                  if i = n then head else
+                     let {
+                        key :: keyType = #!(extract is);
+                        val :: valType = #!(extract is);
+                        nodePtr :: Ptr (HashTableEntry keyType valType) = Ptr ¬^(#!(~HashTableEntry #!(¬^(#!(Null)), ¬^key, ¬^val)))
+                     } in {
+                        if prev ¬= Null then
+                           setHashTableEntryNext nodePtr prev;
+                        extractTail is n (i + 1) nodePtr (if i = 0 then nodePtr else head)
+                     }
+            } in
+               extractTail is n 0 Null Null;
+
+         extractSlots :: InputStream Byte -> Ptr (Array (Ptr (HashTableEntry keyType valType))) -> Int -> Int -> Void;
+         extractSlots is slots nSlots slotsInUse =
+            let {
+               setNull :: Ptr (Array (Ptr (HashTableEntry keyType valType))) -> Int -> Int -> Void;
+               setNull slots from to =
+                  if from < to then {
+                     putAtPtrArray slots from Null;
+                     setNull slots (from + 1) to
+                  };
+               extractSlots_ :: InputStream Byte -> Ptr (Array (Ptr (HashTableEntry keyType valType))) -> Int -> Int -> Int -> Void;
+               extractSlots_ is slots nSlots remInUse nextUnset =
+                  if remInUse > 0 then
+                     let {
+                        slotIndex :: Int = extract is;
+                        len       :: Int = extract is;
+                        nodePtr :: Ptr (HashTableEntry keyType valType) = extractChain is len;
+                     } in {      
+                        setNull slots nextUnset slotIndex;
+                        putAtPtrArray slots slotIndex nodePtr;
+                        extractSlots_ is slots nSlots (remInUse - 1) (slotIndex + 1)
+                     }
+                  else
+                     setNull slots nextUnset nSlots 
+            } in
+               extractSlots_ is slots nSlots slotsInUse 0
+               
+      } in {
+         extractSlots is slots nSlots slotsInUse;
+         ~HashTable (nSlots, ¬^slots)
+      } 
+};
+
+-- OutputStream Byte, HashTable instance of StreamInsert 
+
+instance StreamInsert OutputStream Byte, HashTable keyType valType where {
+   inline insert (os :: OutputStream Byte) ht =
+      let {
+
+      insertChain :: OutputStream Byte -> Ptr (HashTableEntry keyType valType) -> Void;
+      insertChain os nodePtr =
+         let {
+            insertChain_:: OutputStream Byte -> Ptr (HashTableEntry keyType valType) -> Void;
+            insertChain_ os nodePtr =
+               case nodePtr of {
+                  Null -> !Void;
+                  Ptr (HashTableEntry next k v) -> {
+                     insert os k;
+                     insert os v;
+                     insertChain_ os next
+                  }
+               }
+         } in
+            insertChain_ os nodePtr;      
+        
+         slotUseCount :: Ptr (Array (Ptr (HashTableEntry keyType valType))) -> Int -> Int;        
+         slotUseCount slots nSlots =
+            let {
+               slotUseCount_ :: Ptr (Array (Ptr (HashTableEntry keyType valType))) -> Int -> Int -> Int -> Int;
+               slotUseCount_ slots nSlots i acc =
+                  if i < nSlots then 
+                     slotUseCount_ slots nSlots (i + 1)
+                                   case getAtPtrArray slots i of {
+                                      Null -> acc;
+                                      Ptr _-> acc + 1
+                                   }
+                  else
+                     acc;
+            } in
+               slotUseCount_ slots nSlots 0 0;
+
+      insertSlots :: OutputStream Byte -> Ptr (Array (Ptr (HashTableEntry keyType valType))) -> Int -> Int -> Void;
+      insertSlots os slots nSlots i  =
+         if i < nSlots then
+            let {
+               nodePtr :: Ptr (HashTableEntry keyType valType) = getAtPtrArray slots i;
+               chainLen :: Ptr (HashTableEntry keyType valType) -> Int;
+               chainLen nodePtr =
+                  let {
+                     chainLen_ :: Ptr (HashTableEntry keyType valType) -> Int -> Int;
+                     chainLen_ nodePtr acc = 
+                        case nodePtr of {
+                           Null -> acc;
+                           Ptr (HashTableEntry next _ _) -> chainLen_ next (acc + 1)
+                        }
+                  } in
+                     chainLen_ nodePtr 0;
+               len :: Int = chainLen nodePtr;
+            } in {
+               if len > 0 then {
+                  insert os i;
+                  insert os len;
+                  insertChain os nodePtr;
+               };
+               insertSlots os slots nSlots (i + 1)  
+            }
+    } in
+       case ht of {
+          ~HashTable (nSlots, slots) -> {
+             insert os nSlots;
+             insert os #!(slotUseCount slots nSlots);
+             insertSlots os slots nSlots 0
+          }
+       }
+};
+
+{- Currently unused version implemented with plain types
+
+instance StreamInsert OutputStream Byte, Plain (HashTable keyType valType) where {
+   inline insert (os :: OutputStream Byte) ht =
+      let {
+         chainLen :: Plain (Ptr (HashTableEntry keyType valType)) -> Int;
+         chainLen nodePtr =
+            let {
+               chainLen_ :: Plain (Ptr (HashTableEntry keyType valType)) -> Int -> Int;
+               chainLen_ nodePtr acc = 
+                  case nodePtr of {
+                     #Null -> acc;
+                     #Ptr (#~HashTableEntry #(next, _, _) ) -> chainLen_ next (acc + 1)
+                  }
+            } in
+               chainLen_ nodePtr 0;
+
+      insertChain :: OutputStream Byte -> Plain (Ptr (HashTableEntry keyType valType)) -> Void;
+      insertChain os nodePtr =
+         let {
+            insertChain_:: OutputStream Byte -> Plain (Ptr (HashTableEntry keyType valType)) -> Void;
+            insertChain_ os nodePtr =
+               case nodePtr of {
+                  #Null -> #!Void;
+                  #Ptr (#~HashTableEntry #(next, k, v) ) -> {
+                     insert os k;
+--                     insert os v;
+                     insertChain_ os next
+                  }
+               }
+         } in
+            insertChain_ os nodePtr;               
+
+      insertSlots :: OutputStream Byte -> Plain (Ptr (Array (Ptr (HashTableEntry keyType valType)))) -> Int -> Int -> Void;
+      insertSlots os slots nSlots i  =
+         if i < nSlots then
+            let {
+               nodePtr :: Plain (Ptr (HashTableEntry keyType valType)) = getAtPlainPtrArray slots i;
+               len :: Int = chainLen nodePtr;
+            } in {
+               insert os len;
+               insertChain os nodePtr;
+               insertSlots os slots nSlots (i + 1)  
+            }
+    } in
+       case ht of {
+          #~HashTable #(Plain nSlots, slots) -> {
+             insert os nSlots;
+             insertSlots os slots nSlots 0
+          }
+       }
+};
+-}
+
+}

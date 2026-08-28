@@ -1,0 +1,7 @@
+show (compare 1 2);                                                          show '\n';
+show (compare 2 2);                                                          show '\n';
+show (compare 3 2);                                                          show '\n';
+show (compare "abc" "abd");                                                  show '\n';
+show (compare 'a' 'b');                                                      show '\n';
+show (case (compare 1 2) of { LT -> "less"; EQ -> "equal"; GT -> "greater" }); show '\n';
+show (case (compare 2 2) of { LT -> "less"; EQ -> "equal"; GT -> "greater" }); show '\n';

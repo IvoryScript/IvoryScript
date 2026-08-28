@@ -1,0 +1,6 @@
+# awk_it_2
+$1 == "Non-terminal"     { print "#define", "lex_" $3, "10" $2; next }
+$1 == "Terminal"         { next }
+$1 == "Pseudo-terminal"  { next }
+$1 == "Monadic"          { next }
+$1 == "Dyadic"           { next }

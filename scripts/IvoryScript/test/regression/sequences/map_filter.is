@@ -1,0 +1,12 @@
+show (mapf ((*) 2) [1, 2, 3, 4, 5]);                                 show '\n';
+show (mapf (\x -> x * x) [1, 2, 3, 4]);                              show '\n';
+show (mapf length ["one", "two", "three"]);                          show '\n';
+show (filter (\n -> n mod 2 = 0) [1, 2, 3, 4, 5, 6]);                show '\n';
+show (filter (\n -> n > 3) [1, 2, 3, 4, 5]);                         show '\n';
+show (filter (\n -> n * n < 20) [1, 2, 3, 4, 5]);                    show '\n';
+
+--show (mapf ((*) 3) (filter (\n -> n mod 2 = 0) [1, 2, 3, 4, 5, 6])); show '\n';
+mapf ((*) 3) (filter (\n -> n mod 2 = 0) [1, 2, 3, 4, 5, 6])
+
+
+

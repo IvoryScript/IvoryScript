@@ -1,0 +1,79 @@
+{-
+ADVANCED EXAMPLE: LAZY PRIME SERIALISATION
+==========================================
+-}
+"Please follow the script comments instructions."
+{-
+This example demonstrates store serialisation using a lazily evaluated
+infinite prime sequence. No primes are computed until the final retrieval
+expression is executed.
+
+PART 1 - CREATE THE STORE
+--------------------------
+
+1. Choose 'Stores' >> 'New'
+2. Enter a name for the store (e.g. foo) and confirm
+3. Close the stores dialog
+
+PART 2 - ADD THE BINDING
+-------------------------
+
+Clear, then enter and invoke the following, replacing 'foo' with the
+chosen store name:
+
+def .foo.primesFrom1000 = Any (drop 1000 (
+   let {
+      sieve :: [Int] -> [Int];
+      sieve l =
+         case l of {
+            [] -> [];
+            p :+ xs -> filter (\x -> x mod p ¬= 0) (::xs)
+         };
+   } in
+      mapf hd (iterate sieve (listFrom 2 1))));     
+
+This binding is unevaluated.
+(no prime computation takes place at this point)
+
+PART 3 - SAVE THE STORE (OPTIONAL)
+------------------------------------
+
+To persist the store across sessions:
+
+1. Choose 'Stores'
+2. Locate the store row and 'Download'
+3. Save the file locally using the file picker
+4. Close the stores dialog
+
+To restore in a later session:
+
+1. Choose 'Stores' >> 'Upload'
+2. Enter a name for the store in the 'Name' field
+3. Select the saved file and 'Upload'
+4. Close the stores dialog
+
+PART 4 - RETRIEVE THE PRIMES
+------------------------------
+
+With the store available, clear, enter and invoke:
+
+   take 100 #!(.foo.primesFrom1000::Exp (Exp [Int]))
+
+The 1000 dropped sieve iterations are performed at this point, and the subsequent
+100 primes returned.
+
+
+NOTES
+-----
+
+- The Exp (Exp [Int]) type annotation reflects two layers of deferred
+  evaluation: the unevaluated drop function application and its lazy
+  result. The '#!' operator forces the outer layer, allowing 'take'
+  to traverse the resulting list.
+
+- The store name entered during 'New' or 'Upload' must be used
+  consistently in all console commands.
+
+- A store may be removed at any time via its 'Remove' button; this does
+  not affect any locally saved copy.
+-}

@@ -1,0 +1,46 @@
+-- Memoised coin-change regression.
+--
+-- Covers a higher-order memoisation helper which captures a hash table and
+-- returns a cached function. With small GC blocks this exercises update
+-- indirections retained by closures and hash table entries.
+
+let {
+   cache :: Ptr (HashTable Int Int) = ^(HashTable 101);
+
+   memoise :: ([Int] -> Int -> Int -> Int) -> ([Int] -> Int -> Int -> Int);
+   memoise f =
+      let {
+         cached :: [Int] -> Int -> Int -> Int;
+         cached coins n target =
+            let key :: Int = target * 16 + n in {
+               case hashTableGet (@cache) key key of {
+                  Just result -> result;
+                  Nothing -> {
+                     let res :: Int = f coins n target in {
+                        hashTableAdd (@cache) key key res;
+                        res
+                     }
+                  }
+               }
+            }
+      } in
+         cached;
+
+   waysMemo :: [Int] -> Int -> Int -> Int;
+   waysMemo = memoise (\(coins :: [Int]) (n :: Int) (target :: Int) ->
+      if target = 0 then 1
+      else case coins of {
+         [] -> 0;
+         x :+ xs ->
+            let tlRes :: Int = waysMemo (!xs) (n - 1) target in
+               if x > target then tlRes
+                             else (waysMemo coins n (target - x)) + tlRes;
+      });
+
+   coins :: [Int] = [1, 2, 5, 10, 20, 50, 100];
+   sum :: Int = 100;
+   result :: Int = waysMemo coins (length coins) sum
+} in {
+   show result;
+   show "\n"
+}

@@ -1,0 +1,15 @@
+-- A 'for' loop with a time delay
+
+let {
+   loop::Int->Void;
+   loop n = {
+      show ' '; show n;
+      delay 1;
+      if n > 0
+         then loop (n - 1)
+   }
+} in {
+   show "Countdown:";
+   loop 10;
+   show '\n'
+}

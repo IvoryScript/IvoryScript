@@ -1,0 +1,134 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory transient data store
+--
+-- Date: 25 October 2003
+--
+-- Description:
+--    A basic transient data store for a given root type 
+--    in a separate environment.
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module TransientDataStore where {
+
+transientDataStoreMagic :: String = "I_SDS_v_0001\x1A\x0D\x0A\x00";
+
+type TransientDataStore a = TransientDataStore a;
+
+TransientDataStore :: a -> (Plain a, Env);
+inline TransientDataStore root = 
+   let {
+      env :: Env = mkEnv 1024 47 16 47 16 47 47 16;
+      mappedRoot :: a = mapToEnv root env 
+   } in
+      (#!(Plain mappedRoot), ¬^env);
+
+instance Mark_GC (TransientDataStore b) where {
+   inline mark_GC tds =
+      case tds of { ~TransientDataStore repr  ->
+         mark_GC (fromPlain (fst repr) (snd repr))
+      }
+};
+
+instance Disposable (TransientDataStore b) where {
+   inline destroy tds =
+      case tds of { ~TransientDataStore repr  ->
+         destroy (snd repr)
+      }
+};
+
+-- Copying is direct
+instance Env (TransientDataStore b);
+
+instance Show (TransientDataStore b) where {
+   inline show tds =
+      case tds of { ~TransientDataStore repr  ->
+         show (fromPlain (fst repr) (snd repr))
+      }
+};
+
+instance StreamInsert OutputStream Char, (TransientDataStore c) where {
+   inline insert os tds =
+      case tds of { ~TransientDataStore repr  ->
+         insert os (fromPlain (fst repr) (snd repr))
+      }
+};
+
+instance StreamExtract (InputStream Byte), (TransientDataStore c) where {
+   inline extract (is::InputStream Byte) =
+      let { 
+         checkMagicBytes :: InputStream Byte -> Int -> Int -> Bool;
+         checkMagicBytes is i n =
+            if i < n then
+               (#!(extract is))::Char = (getAt transientDataStoreMagic i) and (checkMagicBytes is (i + 1) n)
+            else
+               True
+      } in
+         if checkMagicBytes is 0 ((length transientDataStoreMagic) + 1) then {
+            let {
+               env::Env = consEnv;
+               isEnv= (#!(extract is)) :: Env
+            } in {
+               setEnv isEnv;
+               if (#!(extract is) = #::c) then
+                  let {
+                     data = (#!(extract is))::c;
+                     res :: TransientDataStore c = ~TransientDataStore #!(¬^(#!(Plain data)), ¬^isEnv)
+                  } in {
+                     setEnv env;
+                     res
+                  }
+               else {
+                  setEnv env;
+                  error "TransientDataStore: extract type mismatch"
+               }
+            }
+         } else
+            error "TransientDataStore: invalid"
+};
+
+instance StreamInsert (OutputStream Byte), (TransientDataStore c) where {
+   inline insert (os::OutputStream Byte) tds =
+      case tds of { ~TransientDataStore repr -> 
+         let {
+            mappedType :: Type = mapToEnv #::c (snd repr);
+            insertMagicBytes :: (OutputStream Byte) -> Int -> Int -> Void;
+            insertMagicBytes os i n =
+               if i < n then {
+                  insert os #!(getAt transientDataStoreMagic i);                     
+                  insertMagicBytes os (i + 1) n
+               }
+         } in {
+            insertMagicBytes os 0 ((length transientDataStoreMagic) + 1);
+            insert os #!(snd repr);
+            insert os mappedType;
+            insert os #!(fromPlain #!(fst repr) #!(snd repr))
+         }
+      }
+}
+
+}
+

@@ -1,0 +1,17 @@
+-- Bits literal and conversion regression.
+--
+-- Expected output:
+-- 0
+-- ff
+-- 1234
+-- 3ee87
+-- ff
+-- 255
+
+show (0x0::Bits);                                    show '\n';
+show 0xff;                                           show '\n';
+show (0x1234::Bits);                                 show '\n';
+show (((0x3e74b::Int) + (0x73c::Int))::Bits);        show '\n';
+show (fromIntBits 255);                              show '\n';
+show (fromBitsInt 0xff);                             show '\n';
+

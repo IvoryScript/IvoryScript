@@ -1,0 +1,22 @@
+let tree :: Exp (Tree Int) = (Branch (Leaf 1)
+                             (Branch (Branch (Leaf 7)
+                                             (Branch (Branch (Leaf 4)
+                                                             (Branch (Leaf 0)
+                                                                     (Leaf 9)))
+                                                     (Branch (Leaf 4)
+                                                             (Branch (Leaf 8)
+                                                                     (Leaf 8)))))
+                                     (Branch (Empty)
+                                             (Branch (Branch (Leaf 4)
+                                                             (Branch (Leaf 5)
+                                                                     (Leaf 5)))
+                                                     (Branch (Leaf 1)
+                                                             (Branch (Leaf 7)
+                                                                     (Leaf 1)))))))
+in {
+   show tree;
+   show "Depth:   "; show (depthTree tree); show '\n';
+   show "Maximum: "; show (maxTree tree);   show '\n';
+   show "Sum:     "; show (sumTree tree);   show '\n'
+}
+

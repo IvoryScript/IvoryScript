@@ -1,0 +1,12 @@
+show (case True of { True -> 1; False -> 0 });                                                                       show '\n';
+show (case False of { True -> 1; False -> 0 });                                                                      show '\n';
+show (case [1, 2, 3] of { [] -> 0; x :+ xs -> x });                                                                  show '\n';
+show (case ([] :: [Int]) of { [] -> "empty"; _ :+ _ -> "cons" });                                                    show '\n';
+show (case [1, 2, 3] of { [] -> "empty"; _ :+ _ -> "cons" });                                                        show '\n';
+show (case (compare 1 2) of { LT -> "less"; EQ -> "equal"; GT -> "greater" });                                       show '\n';
+show (case #alice of { #bob -> "bob"; #alice -> "alice"; otherwise -> "other" });                                    show '\n';
+show (case #::Int of { #::String -> "string"; #::Int -> "int"; otherwise -> "other" });                              show '\n';
+show (case 1 of { 0 -> "zero"; 1 -> "one"; otherwise -> "other" });                                                  show '\n';
+show (case 'b' of { 'a' -> "a"; 'b' -> "b"; otherwise -> "other" });                                                 show '\n';
+show (case "alpha" of { "alpha" -> "alpha"; "beta" -> "beta"; otherwise -> "other" });                               show '\n';
+show (let s :: String = "be" ++ "ta" in case s of { "alpha" -> "alpha"; "beta" -> "beta"; otherwise -> "other" });   show '\n';

@@ -1,0 +1,8 @@
+show (True | False);     show '\n';
+show (False | False);    show '\n';
+show (True | True);      show '\n';
+show (True and True);    show '\n';
+show (True and False);   show '\n';
+show (False and False);  show '\n';
+show (not True);         show '\n';
+show (not False);        show '\n';

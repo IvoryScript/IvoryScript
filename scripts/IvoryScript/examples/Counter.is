@@ -1,0 +1,21 @@
+-- A counter
+
+let {
+   mkCounter :: Int -> Int -> Exp Int;
+   mkCounter i step =
+      let {
+         countPtr :: Ptr Int = ^i;
+         thunk :: (-> Int);
+         thunk = variable (\-> let count :: Int = @countPtr in {countPtr @= count + step; count});
+      } in
+         fromThunk thunk;
+} in {
+   def .counter1 = Any #!(mkCounter 10 1);
+   def .counter2 = Any #!(mkCounter 100 (-1))
+};
+
+.counter1;
+.counter2;
+.counter2
+
+-- ...

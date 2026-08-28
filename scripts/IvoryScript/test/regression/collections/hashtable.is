@@ -1,0 +1,23 @@
+-- Int keys; hash value = key
+let ht :: HashTable Int String = HashTable 8 in {
+    hashTableAdd ht 1 1 "one";
+    hashTableAdd ht 2 2 "two";
+    hashTableAdd ht 3 3 "three";
+    show (hashTableGet ht 1 1);   show '\n';
+    show (hashTableGet ht 2 2);   show '\n';
+    show (hashTableGet ht 3 3);   show '\n';
+    show (hashTableGet ht 9 9);   show '\n';
+    show (nHashTableSlots ht);    show '\n';
+    show ht;                      show '\n'
+};
+
+-- Remove an entry
+let ht :: HashTable Int String = HashTable 4 in {
+    hashTableAdd ht 0 0 "zero";
+    hashTableAdd ht 1 1 "one";
+    hashTableAdd ht 2 2 "two";
+    show (hashTableGet ht 1 1);   show '\n';
+    hashTableRemove ht 1 1;
+    show (hashTableGet ht 1 1);   show '\n';
+    show ht;                      show '\n'
+};

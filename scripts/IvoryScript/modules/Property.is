@@ -1,0 +1,93 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory Property type implementation
+--
+-- Date: 25 October 2003
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module Property where {
+
+type Property = Property Name a;
+
+Property :: Name -> a -> Binding Name Any;
+inline Property name value = ~Bind (name, ¬^(#!(Any ¬::value)))
+matching {inline #!(\repr -> #!(case repr of {Bind name _ ->             name}));
+          inline #!(\repr -> #!(case repr of {Bind _ (Any (value::a)) -> value}))};
+
+nameOfProperty :: Property -> Name;
+inline nameOfProperty p = case p of { ~Property (n:_) -> n};
+
+typeOfProperty :: Property -> Type;
+inline typeOfProperty p = case p of { ~Property (Bind _ v) -> typeOfAny v};
+
+-- Property instance of Mark_GC
+
+instance Mark_GC Property where {
+  mark_GC p = case p of { ~Property repr -> mark_GC repr };
+};
+
+-- Property instance of Env
+
+instance Env Property where {
+   inline needsEnv p = True;  
+   mapToEnv p dstEnv =
+      case p of { ~Property (b :: Binding Name Any) -> ~Property (mapToEnv b dstEnv) }
+};
+
+-- Property instance of Show
+
+instance Show Property where {
+  show p = case p of { ~Property repr -> show repr };
+};
+
+-- InputStream Byte, Property instance of StreamExtract 
+
+instance StreamExtract InputStream Byte, Property where {
+   inline extract is = let {
+      binding :: Binding Name Any = (extract is);
+   } in
+      ~Property binding
+};
+
+-- OutputStream Byte, Property instance of StreamInsert 
+
+instance StreamInsert OutputStream Byte, Property where {
+  inline insert os p = case p of { ~Property repr -> insert os repr };
+};
+
+-- Binding values are evaluated when cast to a Property
+
+instance StrictCast Binding Name c, Property where {
+   inline strictCast b = case b of { n:v -> Property n ¬::(!v) }
+};
+{-
+instance StrictCast Binding Name (Uneval d), Property where {
+   inline strictCast b = case b of { n:(Uneval v) -> Property n (¬::v) }
+};
+-}
+
+}

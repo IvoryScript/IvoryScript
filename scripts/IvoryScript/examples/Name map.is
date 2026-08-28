@@ -1,0 +1,18 @@
+-- An example of mapping names to values using a hash table
+
+let dictionary :: NameAnyMap = NameAnyMap 31
+in {
+   addBinding dictionary #name      "Zara";
+   addBinding dictionary #age       7;
+   addBinding dictionary #class_    "First";
+    
+   show "Name:  "; show (dictionary.name); show '\n';
+   show "Age:   "; show (dictionary.age); show '\n';
+   show "Class: "; show (dictionary.class_); show '\n';
+
+   show (typeOf dictionary); show '\n';
+   show (typeOfAny (dictionary.name)); show '\n';
+   show (typeOfAny (dictionary.age)); show '\n';
+
+   dictionary
+}

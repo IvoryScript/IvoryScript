@@ -1,0 +1,589 @@
+-------------------------------------------------------------------------------
+--
+-- (c) Copyright 2000-2026 by Alasdair Scott
+--
+-- Ivory Streams implementation
+--
+-- Original date: 25 October 2025
+--
+-------------------------------------------------------------------------------
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module Streams where {
+
+instance Env SerialContext;
+
+-- Currently, garbage collection n/a for SerialContext
+
+instance Mark_GC SerialContext;
+
+--primitive getSerialContext :: Int -> SerialContext;
+--primitive destroySerialContext :: SerialContext -> Void;
+
+type InputStream a = InputStream (Exp Byte) (Exp Void) SerialContext;
+
+type OutputStream a = OutputStream (a -> Void) (Exp Void) SerialContext;
+
+InputStream :: Exp a -> Exp Void -> SerialContext -> Ptr (Exp a, Exp Void, SerialContext);
+
+OutputStream :: (a -> Void) -> Exp Void -> SerialContext -> Ptr (a -> Void, Exp Void, SerialContext);
+
+inline InputStream inputAction closeAction serialContext = #!(Ptr ¬^(#!(inputAction, closeAction, serialContext)))
+matching {inline #!(\repr -> #!(case repr of {Ptr (inAct, _, _) ->      inAct}));
+          inline #!(\repr -> #!(case repr of {Ptr (_, closeAct, _) ->   closeAct}));
+          inline #!(\repr -> #!(case repr of {Ptr (_, _, serialContext) -> serialContext}))};
+
+inline OutputStream outputFn closeAction serialContext = #!(Ptr ¬^(#!(outputFn, closeAction, serialContext)))
+matching {inline #!(\repr -> #!(case repr of {Ptr (outFn, _, _) ->      outFn}));
+          inline #!(\repr -> #!(case repr of {Ptr (_, closeAct, _) ->   closeAct}));
+          inline #!(\repr -> #!(case repr of {Ptr (_, _, serialContext) -> serialContext}))};
+
+streamInputAction :: InputStream a -> Exp a;
+inline streamInputAction is = case is of { InputStream inAct _ _ -> inAct };
+
+streamOutputFn :: OutputStream a -> ( a -> Void);
+inline streamOutputFn os = case os of { OutputStream outFn _ _ -> outFn };
+
+streamCloseInputAction :: InputStream a -> (Exp Void);
+inline streamCloseInputAction is = case is of { InputStream _ closeAct _ -> closeAct };
+
+streamCloseOutputAction :: OutputStream a -> (Exp Void);
+inline streamCloseOutputAction os = case os of { OutputStream _ closeAct _ -> closeAct };
+
+streamInputSerialContext :: InputStream a -> SerialContext;
+inline streamInputSerialContext is = case is of { InputStream _ _ serialContext -> serialContext };
+
+streamOutputSerialContext :: OutputStream a -> SerialContext;
+inline streamOutputSerialContext os = case os of { OutputStream _ _ serialContext -> serialContext };
+
+instance Env InputStream b where {
+   inline mapToEnv is env = error "Invalid operation for InputStream"
+};
+
+instance Env OutputStream b where {
+   inline mapToEnv os env = error "Invalid operation for OutputStream"
+};
+
+instance Mark_GC InputStream b where {
+   inline mark_GC is  = 
+      case is of {
+         ~InputStream repr -> 
+            case repr of {Ptr (inAct, closeAct, _) ->
+               if markPtr_GC repr then {
+                  mark_GC inAct;
+                  mark_GC closeAct
+               }
+            }
+      }
+};
+
+instance Mark_GC OutputStream b where {
+   inline mark_GC os  = 
+      case os of {
+         ~OutputStream repr -> 
+            case repr of {Ptr (outFn, closeAct, _) ->
+               if markPtr_GC repr then {
+                  mark_GC outFn;
+                  mark_GC closeAct
+               }
+            }
+      }
+};
+
+instance Show InputStream b where {
+  inline show is = show "InputStream"
+};
+
+instance Show OutputStream b where {
+  inline show os = show "OutputStream"
+};
+
+-- A file based binary 'InputStream'
+
+fileInputByteStream :: String -> InputStream Byte;
+fileInputByteStream path =
+   let {
+      serialContext :: SerialContext = getSerialContext 1024;
+
+      fh :: FileHandle = openFile path IO_Read;
+
+      inAct :: Exp Byte;
+      inAct = variable (readFileByte fh);
+
+      closeAct :: Exp Void;
+      closeAct = variable { closeFile fh; #!(destroySerialContext serialContext) };
+
+   } in
+      InputStream inAct closeAct serialContext;
+
+-- A file based binary 'OutputStream'
+
+fileOutputByteStream :: String -> OutputStream Byte;
+fileOutputByteStream path =
+   #!(let {
+      serialContext :: SerialContext = #!(getSerialContext 1024);
+
+      fh :: FileHandle = #!(openFile path IO_Write);
+
+      outFn :: Byte -> Void;
+      outFn b = writeFileByte fh b;
+
+      closeAct :: Exp Void;
+      closeAct = variable { closeFile fh; #!(destroySerialContext serialContext) };
+
+   } in
+      OutputStream outFn closeAct serialContext);
+
+class StreamExtract a, b where {
+   extract :: a -> b
+};
+
+class StreamInsert a, b where {
+   insert :: a -> b -> Void;
+   inline insert os x = insertSerial os #!(serialise x)
+};
+
+class InsertSerial a, b where {
+   insertSerial :: a -> b -> Void
+};
+
+instance InsertSerial (OutputStream Char), String where {
+   inline insertSerial = insert
+};
+
+instance InsertSerial (OutputStream Byte), ByteString where {
+   inline insertSerial = insert
+};
+
+
+instance StreamExtract InputStream Byte, FileHandle where {
+inline
+   extract is = #!(error "StreamExtract not implemented for file handle")
+};
+
+instance StreamInsert OutputStream Byte, FileHandle where {
+inline
+   insert os fh = #!Void
+};
+
+instance StreamExtract InputStream Byte, SerialContext where {
+inline
+   extract is = #!(error "StreamExtract not implemented for serial context")
+};
+
+instance StreamInsert OutputStream Byte, SerialContext where {
+inline
+   insert os fh = #!Void
+};
+
+instance StreamExtract InputStream Byte, InputStream Byte where {
+inline
+   extract is = #!(error "StreamExtract not implemented for input stream")
+};
+
+instance StreamInsert OutputStream Byte, InputStream Byte where {
+inline
+   insert os is = #!Void
+};
+
+
+instance StreamExtract InputStream Byte, OutputStream Byte where {
+inline
+   extract is = #!(error "StreamExtract not implemented for output stream")
+};
+
+instance StreamInsert OutputStream Byte, OutputStream Byte where {
+inline
+   insert os os = #!Void
+};
+
+instance StreamExtract InputStream Byte, OutputStream Char where {
+inline
+   extract is = #!(error "StreamExtract not implemented for output stream")
+};
+
+instance StreamInsert OutputStream Byte, OutputStream Char where {
+inline
+   insert os os = #!Void
+};
+
+-- extractFreeVars & insertFreeVars are intended only for
+-- internal use to (respectively) extract and insert
+-- the free variables of a closure on binary serialisation
+
+primitive extractFreeVars :: InputStream Byte -> a -> Void;
+primitive insertFreeVars :: OutputStream Byte -> a -> Void;
+
+primitive extractSerialString :: InputStream Byte -> String;
+primitive insertSerialString :: OutputStream Byte -> String -> Void;
+
+-- extractBinGenPtr is used to generate extract type methods (for Any)
+extractBinGenPtr :: InputStream Byte -> Ptr a;
+inline extractBinGenPtr is =
+   let x :: a = #!(extract is)
+   in
+      #!(Ptr ¬^x);
+
+-- insertBinGenPtr is used to generate insert type methods (for Any)
+insertBinGenPtr :: OutputStream Byte -> Ptr a -> Void;
+inline insertBinGenPtr os p = insert os (::(#!(@p)));
+
+-- insertTxtGenPtr is used to generate text insert type methods (for Any)
+insertTxtGenPtr :: OutputStream Char -> Ptr a -> Void;
+inline insertTxtGenPtr os p = insert os (::(#!(@p)));
+
+primitive extractBinFn :: InputStream Byte -> (a -> b);
+instance StreamExtract InputStream Byte, c -> d where {
+inline
+   extract = extractBinFn
+};
+
+primitive insertBinFn :: OutputStream Byte -> (a -> b) -> Void;
+instance StreamInsert OutputStream Byte, c -> d where {
+inline
+   insert = insertBinFn
+};
+
+primitive extractBinThunk :: InputStream Byte -> (-> a);
+instance StreamExtract InputStream Byte, (-> c) where {
+inline
+   extract = extractBinThunk
+};
+
+primitive insertBinThunk :: OutputStream Byte -> ((-> a)) -> Void;
+instance StreamInsert OutputStream Byte, (-> c) where {
+inline
+   insert = insertBinThunk
+};
+
+primitive extractBinExpr :: InputStream Byte -> Exp a;
+instance StreamExtract InputStream Byte, Exp c where {
+inline
+   extract is =
+      let expr :: Exp c = #!(extractBinExpr is)
+      in
+         expr
+};
+
+primitive insertBinExpr :: OutputStream Byte -> Exp a -> Void;
+instance StreamInsert OutputStream Byte, Exp c where {
+inline
+   insert = insertBinExpr
+};
+
+-- Type: Env
+
+--primitive extractBinEnv :: InputStream Byte -> Env;
+instance StreamExtract InputStream Byte, Env where {
+inline
+   extract =  extractBinEnv
+};
+
+--primitive insertBinEnv :: OutputStream Byte -> Env -> Void;
+instance StreamInsert OutputStream Byte, Env where {
+   insert = insertBinEnv
+};
+
+-- Type: Name
+
+--primitive extractBinName :: InputStream Byte  -> Name;
+instance StreamExtract InputStream Byte, Name where {
+inline
+   extract = extractBinName
+};
+
+--primitive insertBinName :: OutputStream Byte -> Name -> Void;
+instance StreamInsert OutputStream Byte, Name where {
+inline
+   insert = insertBinName
+};
+
+--primitive insertTxtName :: OutputStream Char -> Name -> Void;
+instance StreamInsert OutputStream Char, Name where {
+inline
+   insert = insertTxtName
+};
+
+-- Type: Type
+
+--primitive extractBinType :: InputStream Byte  -> Type;
+instance StreamExtract InputStream Byte, Type where {
+inline
+   extract = extractBinType
+};
+
+--primitive insertBinType :: OutputStream Byte -> Type -> Void;
+instance StreamInsert OutputStream Byte, Type where {
+inline
+   insert = insertBinType;
+};
+
+--primitive insertTxtType :: OutputStream Char -> Type -> Void;
+instance StreamInsert OutputStream Char, Type where {
+inline
+   insert = insertTxtType
+};
+
+-- Type: Int
+
+--primitive extractBinInt :: InputStream Byte -> Int;
+instance StreamExtract InputStream Byte, Int where {
+inline
+   extract = extractBinInt
+};
+
+--primitive insertBinInt :: OutputStream Byte -> Int -> Void;
+instance StreamInsert OutputStream Byte, Int where {
+inline
+   insert = insertBinInt
+};
+
+--primitive insertTxtInt :: OutputStream Char -> Int -> Void;
+instance StreamInsert OutputStream Char, Int where {
+inline
+   insert = insertTxtInt
+};
+
+-- Type: Float
+
+--primitive extractBinFloat :: InputStream Byte -> Float;
+instance StreamExtract InputStream Byte, Float where {
+inline
+   extract = extractBinFloat
+};
+
+--primitive insertBinFloat :: OutputStream Byte -> Float -> Void;
+instance StreamInsert OutputStream Byte, Float where {
+inline
+   insert = insertBinFloat
+};
+
+--primitive insertTxtFloat :: OutputStream Char -> Float -> Void;
+instance StreamInsert OutputStream Char, Float where {
+inline
+   insert = insertTxtFloat
+};
+
+-- Type: Double
+
+--primitive extractBinDouble :: InputStream Byte -> Double;
+instance StreamExtract InputStream Byte, Double where {
+inline
+   extract = extractBinDouble
+};
+
+--primitive insertBinDouble :: OutputStream Byte -> Double -> Void;
+instance StreamInsert OutputStream Byte, Double where {
+inline
+   insert = insertBinDouble
+};
+
+--primitive insertTxtDouble :: OutputStream Char -> Double -> Void;
+instance StreamInsert OutputStream Char, Double where {
+inline
+   insert = insertTxtDouble
+};
+
+-- Type: Char
+
+--primitive extractBinChar :: InputStream Byte -> Char;
+instance StreamExtract InputStream Byte, Char where {
+inline
+   extract = extractBinChar
+};
+
+--primitive insertBinChar :: OutputStream Byte -> Char -> Void;
+instance StreamInsert OutputStream Byte, Char where {
+inline
+   insert = insertBinChar
+};
+
+--primitive insertTxtChar :: OutputStream Char -> Char -> Void;
+instance StreamInsert OutputStream Char, Char where {
+inline
+   insert = insertTxtChar
+};
+
+
+-- Type: String
+
+--primitive extractBinString :: InputStream Byte -> String;
+instance StreamExtract InputStream Byte, String where {
+inline
+   extract = extractBinString
+};
+
+--primitive insertBinString :: OutputStream Byte -> String -> Void;
+instance StreamInsert OutputStream Byte, String where {
+inline
+   insert = insertBinString;
+};
+
+--primitive insertTxtString :: OutputStream Char -> String -> Void;
+instance StreamInsert OutputStream Char, String where {
+inline
+   insert = insertTxtString
+};
+
+-- Type: ByteString
+
+primitive extractBinByteString :: InputStream Byte -> ByteString;
+instance StreamExtract InputStream Byte, ByteString where {
+inline
+   extract = extractBinByteString;
+};
+
+primitive insertBinByteString :: OutputStream Byte -> ByteString -> Void;
+instance StreamInsert OutputStream Byte, ByteString where {
+inline
+   insert = insertBinByteString;
+};
+
+--primitive insertTxtByteString :: OutputStream Char -> ByteString -> Void;
+instance StreamInsert OutputStream Char, ByteString where {
+inline
+   insert = insertTxtByteString
+};
+
+-- Atomic sum types
+
+subordinate instance StreamExtract InputStream Byte, c
+   | instance AtomicSumType c where {
+   inline extract is = castTag(extractBinTag is (#::c))
+};
+
+subordinate instance StreamInsert OutputStream Byte, c
+   | instance AtomicSumType c where {
+   inline insert os x = insertBinTag os (#::c) (tagOf x)
+};
+
+subordinate instance StreamInsert OutputStream Char, c
+   | instance AtomicSumType c where {
+   inline insert os x = insertTxtTag os (#::c) (tagOf x)
+};
+
+-- Type: (a, b)
+
+instance StreamExtract (InputStream Byte), (c, d) where {
+   inline extract is = let {
+      c1 =  (#!(extract is)) :: c;
+      c2 =  (#!(extract is)) :: d
+   } in
+      #!(¬^c1, ¬^c2)
+};
+
+instance StreamInsert (OutputStream Byte), (c, d) where {
+   inline insert os pair =
+      #!case pair of { (c1, c2) -> #!{
+         #!(insert os c1);
+         #!(insert os c2)
+     }}
+};
+
+instance StreamInsert (OutputStream Char), (c, d) where {
+  inline insert os pair =
+     case pair of { (c1, c2) -> {
+        insert os '('; insert os (::c1);
+        insert os ','; insert os (::c2); insert os ')' }
+     }
+};
+
+-- Type: (a, b, c)
+
+instance StreamExtract InputStream Byte, (c, d, e) where {
+   inline extract is = let {
+      c1 =  (#!(extract is)) :: c;
+      c2 =  (#!(extract is)) :: d;
+      c3 =  (#!(extract is)) :: e
+   } in
+      #!(¬^c1, ¬^c2, ¬^c3)
+};
+
+instance StreamInsert OutputStream Byte, (c, d, e) where {
+   inline insert os triple =
+      #!case triple of { (c1, c2, c3) -> #!{
+         #!(insert os c1);
+         #!(insert os c2);
+         #!(insert os c3)
+     }}
+};
+
+instance StreamInsert (OutputStream Char), (c, d, e) where {
+  inline insert os pair =
+     case pair of { (c1, c2, c3) -> {
+        insert os '('; insert os (::c1);
+        insert os ','; insert os (::c2);
+        insert os ','; insert os (::c3); insert os ')' }
+     }
+};
+
+
+instance StreamExtract InputStream Byte, Ptr c | instance StreamExtract InputStream Byte, c where {
+   inline extract is =
+      if ((#!(extract is)) :: Int) = 0
+         then Null
+         else Ptr ¬^((#!(extract is)) :: c)
+};
+
+instance StreamInsert OutputStream Byte, Ptr c | instance StreamInsert OutputStream Byte, c where {
+   inline insert os ptr = case ptr of {
+       Null -> insert os #0;
+       Ptr (x :: c) -> { insert os #1; insert os x }  
+   }
+};
+
+-- Type: Ptr a
+
+instance StreamInsert OutputStream Char, Ptr c | c ¬= Array d where {
+   inline insert os ptr = case ptr of {
+      Null ->  insert os "Null";
+      ^x ->    {insert os "^("; insert os (::x); insert os ')'}
+   }
+};
+
+
+-- Type: Maybe a
+
+instance StreamExtract (InputStream Byte), Maybe c where {
+   inline extract is =
+      if ((#!(extract is)) :: Int) = 0
+         then Nothing
+         else Just ((#!(extract is)) :: c)
+};
+
+instance StreamInsert (OutputStream Byte), Maybe c where {
+   inline insert os ptr = case ptr of {
+       Nothing -> insert os #0;
+       Just (x :: c) -> { insert os #1; insert os x }  
+   }
+};
+
+instance StreamInsert (OutputStream Char), Maybe c where {
+   inline insert os maybe = case maybe of {
+      Nothing -> insert os "Nothing";
+      Just x -> insert os (::x)
+   }
+};
+
+}

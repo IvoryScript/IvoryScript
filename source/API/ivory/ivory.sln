@@ -1,0 +1,63 @@
+
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "common", "common\common.vcproj", "{5B085C40-AC6A-4484-8396-0396A679BB75}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "comms", "comms\comms.vcproj", "{5AB98234-D070-4DC6-8822-E6A9CA852C15}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "measurement", "measurement\measurement.vcproj", "{FF6A3B07-0A52-4277-9899-D4E0F30988C2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "serialIO", "serialIO\serialIO.vcproj", "{F0534C63-BE1D-4DA8-B6D9-283B5E160DBC}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "socket", "socket\socket.vcproj", "{4002F157-210B-4DFE-8C78-D43EDF3BDF59}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "timer", "timer\timer.vcproj", "{C94D64DE-DA6A-45B5-BB96-CE9E25E9A706}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release Excluding X25|Win32 = Release Excluding X25|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B085C40-AC6A-4484-8396-0396A679BB75}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5B085C40-AC6A-4484-8396-0396A679BB75}.Debug|Win32.Build.0 = Debug|Win32
+		{5B085C40-AC6A-4484-8396-0396A679BB75}.Release Excluding X25|Win32.ActiveCfg = Release|Win32
+		{5B085C40-AC6A-4484-8396-0396A679BB75}.Release Excluding X25|Win32.Build.0 = Release|Win32
+		{5B085C40-AC6A-4484-8396-0396A679BB75}.Release|Win32.ActiveCfg = Release|Win32
+		{5B085C40-AC6A-4484-8396-0396A679BB75}.Release|Win32.Build.0 = Release|Win32
+		{5AB98234-D070-4DC6-8822-E6A9CA852C15}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5AB98234-D070-4DC6-8822-E6A9CA852C15}.Debug|Win32.Build.0 = Debug|Win32
+		{5AB98234-D070-4DC6-8822-E6A9CA852C15}.Release Excluding X25|Win32.ActiveCfg = Release|Win32
+		{5AB98234-D070-4DC6-8822-E6A9CA852C15}.Release Excluding X25|Win32.Build.0 = Release|Win32
+		{5AB98234-D070-4DC6-8822-E6A9CA852C15}.Release|Win32.ActiveCfg = Release|Win32
+		{5AB98234-D070-4DC6-8822-E6A9CA852C15}.Release|Win32.Build.0 = Release|Win32
+		{FF6A3B07-0A52-4277-9899-D4E0F30988C2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FF6A3B07-0A52-4277-9899-D4E0F30988C2}.Debug|Win32.Build.0 = Debug|Win32
+		{FF6A3B07-0A52-4277-9899-D4E0F30988C2}.Release Excluding X25|Win32.ActiveCfg = Release|Win32
+		{FF6A3B07-0A52-4277-9899-D4E0F30988C2}.Release Excluding X25|Win32.Build.0 = Release|Win32
+		{FF6A3B07-0A52-4277-9899-D4E0F30988C2}.Release|Win32.ActiveCfg = Release|Win32
+		{FF6A3B07-0A52-4277-9899-D4E0F30988C2}.Release|Win32.Build.0 = Release|Win32
+		{F0534C63-BE1D-4DA8-B6D9-283B5E160DBC}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F0534C63-BE1D-4DA8-B6D9-283B5E160DBC}.Debug|Win32.Build.0 = Debug|Win32
+		{F0534C63-BE1D-4DA8-B6D9-283B5E160DBC}.Release Excluding X25|Win32.ActiveCfg = Release Excluding X25|Win32
+		{F0534C63-BE1D-4DA8-B6D9-283B5E160DBC}.Release Excluding X25|Win32.Build.0 = Release Excluding X25|Win32
+		{F0534C63-BE1D-4DA8-B6D9-283B5E160DBC}.Release|Win32.ActiveCfg = Release|Win32
+		{F0534C63-BE1D-4DA8-B6D9-283B5E160DBC}.Release|Win32.Build.0 = Release|Win32
+		{4002F157-210B-4DFE-8C78-D43EDF3BDF59}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4002F157-210B-4DFE-8C78-D43EDF3BDF59}.Debug|Win32.Build.0 = Debug|Win32
+		{4002F157-210B-4DFE-8C78-D43EDF3BDF59}.Release Excluding X25|Win32.ActiveCfg = Release|Win32
+		{4002F157-210B-4DFE-8C78-D43EDF3BDF59}.Release Excluding X25|Win32.Build.0 = Release|Win32
+		{4002F157-210B-4DFE-8C78-D43EDF3BDF59}.Release|Win32.ActiveCfg = Release|Win32
+		{4002F157-210B-4DFE-8C78-D43EDF3BDF59}.Release|Win32.Build.0 = Release|Win32
+		{C94D64DE-DA6A-45B5-BB96-CE9E25E9A706}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C94D64DE-DA6A-45B5-BB96-CE9E25E9A706}.Debug|Win32.Build.0 = Debug|Win32
+		{C94D64DE-DA6A-45B5-BB96-CE9E25E9A706}.Release Excluding X25|Win32.ActiveCfg = Release|Win32
+		{C94D64DE-DA6A-45B5-BB96-CE9E25E9A706}.Release Excluding X25|Win32.Build.0 = Release|Win32
+		{C94D64DE-DA6A-45B5-BB96-CE9E25E9A706}.Release|Win32.ActiveCfg = Release|Win32
+		{C94D64DE-DA6A-45B5-BB96-CE9E25E9A706}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

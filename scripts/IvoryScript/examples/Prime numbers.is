@@ -1,0 +1,19 @@
+-- The first 100 prime numbers
+
+-- Using module IntSeq
+
+-- take 100 primes
+
+{- Direct version -}
+
+take 100 (let {
+   sieve :: [Int] -> [Int];
+   sieve l =
+      case l of {
+         [] -> [];
+         p :+ xs -> filter (\x -> x mod p ¬= 0) (::xs)
+      };
+} in
+   mapf hd (iterate sieve (listFrom 2 1)))
+
+{--}

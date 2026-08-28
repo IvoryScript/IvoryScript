@@ -1,0 +1,6 @@
+show (if True then 1 else 2);                        show '\n';
+show (if False then 1 else 2);                       show '\n';
+show (if (3 > 2) then "yes" else "no");              show '\n';
+show (if (1 = 2) then "eq" else "neq");              show '\n';
+show (if (not False) then "T" else "F");             show '\n';
+show (if True then (if False then 1 else 2) else 3); show '\n';

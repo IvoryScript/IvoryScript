@@ -1,0 +1,4 @@
+-- List of the first 31 powers of 2
+
+take 31 (iterate (\n -> n * 2) 1)
+

@@ -1,0 +1,23 @@
+-- Constant
+
+case 42 of {41-> "Forty one"; 42 -> "Forty two" };
+
+-- Variable
+
+case 123 of {x -> x};
+
+-- Tuple
+
+case ("abc", "def") of {(x, _) -> x};
+
+-- Nested tuple
+
+case (1,2,(3,4,5),6) of {(a::Int,b::Int,(c::Int,d::Int,e::Int),f::Int) -> d + f};
+
+-- Binding
+
+case alice:42 of { n:v -> {show "Name "; show n; show " is bound to "; v} };
+
+-- List
+
+case ["Apples", "Pears", "Bananas"] of { [] -> show "No fruit"; x:+xs -> { show x; show " followed by "; show xs; show '\n'} }

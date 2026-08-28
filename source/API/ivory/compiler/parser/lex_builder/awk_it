@@ -1,0 +1,14 @@
+#!/usr/bin/awk -f
+BEGIN { FS = "\t"; }
+
+$1 == "Terminal" {
+    if (NF == 5)
+        print "\"" $4 "\"", "lex_push(" $3 "); { " $5 " };";
+    else
+        print "\"" $4 "\"", "lex_push(" $3 "); return(" $3 ");";
+}
+
+$1 == "Pseudo-terminal" { next; }
+$1 == "Monadic"          { next; }
+$1 == "Dyadic"           { next; }
+$1 == "Non-terminal"     { next; }

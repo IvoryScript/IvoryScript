@@ -1,0 +1,215 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{DDF01522-43F4-4B4B-A832-DE1F74530259}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ivorysc</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;ENABLE_ASSERT;CHECK_ARGS;RUN_TIME_TYPE_CHECKS=1;GLOBAL_VM=1;FRAME_DESCRIPTORS=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\..\..\..\source\header</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\..\..\api\MSA\Debug\MSA.lib;..\..\..\api\archive\Debug\archive.lib;..\..\..\api\gen\Debug\gen.lib;..\..\..\api\nameTable\Debug\nameTable.lib;..\..\..\api\segmentTable\Debug\segmentTable.lib;..\..\..\api\objStore\Debug\objStore.lib;..\..\..\api\ivory\common\Debug\common.lib;..\..\..\api\ivory\compiler\Debug\compiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <StackReserveSize>
+      </StackReserveSize>
+      <StackCommitSize>
+      </StackCommitSize>
+      <Profile>false</Profile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;RUN_TIME_TYPE_CHECKS=0;GLOBAL_VM=1;EXTERNAL_RACK=1;FRAME_DESCRIPTORS=1;GARBAGE_COLLECTION=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\..\..\..\source\header</AdditionalIncludeDirectories>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\..\..\api\MSA\Release\MSA.lib;..\..\..\api\archive\Release\archive.lib;..\..\..\api\gen\Release\gen.lib;..\..\..\api\nameTable\Release\nameTable.lib;..\..\..\api\segmentTable\Release\segmentTable.lib;..\..\..\api\objStore\Release\objStore.lib;..\..\..\api\ivory\common\Release\common.lib;..\..\..\api\ivory\compiler\Release\compiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <StackReserveSize>
+      </StackReserveSize>
+      <StackCommitSize>
+      </StackCommitSize>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\..\source\app\ivory\ivorysc\host.cpp" />
+    <ClCompile Include="..\..\..\..\..\source\app\ivory\ivorysc\main.cpp" />
+    <ClCompile Include="..\..\..\..\..\source\app\ivory\ivorysc\suite.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ivorysc.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\..\..\config\ivory\suites\test.suite" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\ADS.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Any.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\AnyBindingSet.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\AnyNum.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\AnySeq.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Arith.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Array.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\BasicVector.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Binding.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Dir.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\HashTable.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\HashTableFunction.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\IntSeq.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\IO.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\List.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\ListFunction.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\MathConst.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\NameAnyMap.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\NameAnyMapFunction.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\NumAggregate.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Prelude.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Property.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\PropertySet.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Serialisable.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\SimpleRoot.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Streams.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Streams_Tuple_4_10.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\StringList.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\TransientDataStore.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\TransientStore.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Tree.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Tuple_4_10.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\modules\Vector.is" />
+    <None Include="..\..\..\..\..\scripts\IvoryScript\test\devel\workInProgress.is" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

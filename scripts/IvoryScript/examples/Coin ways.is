@@ -1,0 +1,31 @@
+-- The number of ways coins of given denominations may be combined to make up a target sum
+
+let {
+   ways :: [Int] -> Int -> Int;
+   ways coins target =
+      if target = 0 then 1
+      else
+         case coins of {
+            [] -> 0;
+            x :+ xs ->
+               let t::Int = ways (::xs) target
+               in
+                  if x > target then t
+                                else (ways coins (target - x)) + t
+         }
+} in
+let {
+-- USD
+   coins :: [Int] = [1, 5, 10, 25, 50, 100];
+-- GBP
+--   coins :: [Int] = [1, 2, 5, 10, 20, 50, 100];
+   sum :: Int = 100
+} in {
+   show "The coins ";
+   show coins;
+   show " may be combined in ";
+   show (ways coins sum);
+   show " ways to make up the sum ";
+   show sum;
+   show  ".\n"
+}

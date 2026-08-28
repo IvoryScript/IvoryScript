@@ -1,0 +1,49 @@
+-- Higher-order partial application regression.
+--
+-- pack5 has two formal parameters in the function definition, but its type has
+-- arity five.  The cases below cover:
+--
+-- 1. na < nfp
+-- 2. na = nfp, with na < arity
+-- 3. na > nfp, with na < arity
+-- 4. na = arity
+--
+-- Expected output:
+-- 12345
+-- 23456
+-- 34567
+-- 45678
+-- 23573
+
+let {
+   -- Pointer arguments cover markable curried formal parameters and a captured free variable.
+   freePtr :: Ptr Int;
+   freePtr = ^123;
+
+   pack4 :: Int -> Int -> (Ptr Int -> Ptr Int -> Int);
+   pack4 a b = \c d -> (a * 10000) + (b * 1000) + ((@c) * 100) + ((@d) * 10) + (@freePtr);
+
+   pack5 :: Int -> Int -> Int -> Int -> Int -> Int;
+   pack5 a b = \c d e -> (a * 10000) + (b * 1000) + (c * 100) + (d * 10) + e;  
+
+   apply1 :: (Int -> Int) -> Int -> Int;
+   apply1 f x = f x;
+
+   apply2 :: (Int -> Int -> Int) -> Int -> Int -> Int;
+   apply2 f x y = f x y;
+
+   apply3 :: (Int -> Int -> Int -> Int) -> Int -> Int -> Int -> Int;
+   apply3 f x y z = f x y z;
+
+   apply4 :: (Int -> Int -> Int -> Int -> Int) -> Int -> Int -> Int -> Int -> Int;
+   apply4 f w x y z = f w x y z;
+
+   applyPtr2 :: (Ptr Int -> Ptr Int -> Int) -> Ptr Int -> Ptr Int -> Int;
+   applyPtr2 f x y = f x y
+} in {
+   show (apply4 (pack5 1) 2 3 4 5); show '\n';
+   show (apply3 (pack5 2 3) 4 5 6); show '\n';
+   show (apply2 (pack5 3 4 5) 6 7); show '\n';
+   show (pack5 4 5 6 7 8);          show '\n';
+   show (applyPtr2 (pack4 2 3) (^4) (^5)); show '\n'
+}

@@ -1,0 +1,61 @@
+
+-- Eight queens solution with optional tracing
+-- (eightQueens False or eightQueens True)
+
+let {
+   printQueens :: Exp [Int] -> Void;
+   printQueens ql =
+      let {
+         stars :: Int -> Void;
+         stars n = if n > 0 then {show '*'; stars (n - 1)}
+      } in
+         case !ql of {
+            [] ->       show "...\n";
+            c :+ cs ->  {stars (c - 1); show 'Q'; stars (8 - c); show '\n'; printQueens cs}
+         };
+   eightQueens :: Bool -> Exp [Int];
+   eightQueens trace =
+      #!(let {
+         rows :: Bool -> Exp [Int] -> Int -> Exp [Int];
+         rows trace ql r =
+            #!(let {
+               place :: Bool -> Exp [Int] -> Int -> Int -> Exp [Int];
+               place trace ql r c =
+                  #!(let {
+                     try :: Bool -> Exp [Int] -> Int -> Int -> Bool;
+                     try trace ql c d = case ::ql of {
+                        [] ->       True;
+                        q :+ qs ->  let res :: Bool =
+                                       if c = q or (abs c - q) = d then False
+                                                                   else try trace qs c (d + 1)
+                                    in
+                                       if trace then {
+                                          show c; show ql; show '\n';
+                                          res
+                                       } else res
+                     }                                     
+                  } in
+                     #!(let { nextCol :: Bool -> Exp [Int] -> Int -> Int -> Exp [Int];
+                              nextCol trace ql r c = if c < 8 then place trace ql r (c + 1)
+                                                              else  ::Nil
+                     } in
+                        #!(if try trace ql c 1 then
+                           let res :: Exp [Int] = rows trace (c :+ ql) (r - 1)
+                           in
+                              case #!res of { Nil ->    nextCol trace ql r c;
+                                               _ :+ _ -> res}
+                        else
+                           nextCol trace ql r c)))
+                         
+            } in
+               if r = 0 then ql
+                        else place trace ql r 1)
+      } in
+         rows trace [#2] 7)
+} in
+   let aSolution :: Exp [Int] = eightQueens False
+   in {
+      show aSolution;
+      show '\n';
+      printQueens aSolution
+   }

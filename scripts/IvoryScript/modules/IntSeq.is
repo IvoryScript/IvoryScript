@@ -1,0 +1,137 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory common integer sequences
+--
+-- Date: 25 October 2003
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module IntSeq where {
+
+-- Positive integer
+
+positiveInts :: Exp [Int];
+positiveInts = variable ¬::(listFrom 1 1);
+
+-- Factorial
+
+factorials :: Exp [Int];
+factorials = variable (
+   let {
+      f :: Int -> Int -> Exp [Int] -> [Int];
+      f n p tail =
+         let next :: Int = if n ¬= 0 then n * p else 1
+         in
+           next :+ (f (n + 1) next tail)
+   } in
+	   f 0 1 []);
+
+
+-- Fibonacci
+
+fibonaccis :: Exp [Int];
+fibonaccis = variable
+   (let {
+      f :: Int -> Int -> Int -> Exp [Int] -> [Int];
+      f a b n tail =
+         let c :: Int = if n < 2 then n else a + b
+         in
+           c :+ (f b c (n + 1) tail)
+   } in
+	f 0 1 0 []);
+
+
+-- Prime
+
+primes :: Exp [Int];
+primes = variable
+   let {
+      isPrime :: Int -> Exp [Int] -> Bool;
+      isPrime n ps =
+         case ::ps of {
+            p :+ qs -> if (p * p) > n then True
+                                      else if (n mod p) = 0 then False
+                                                            else isPrime n qs
+         };
+
+      primesFrom :: Int -> Exp [Int] -> [Int];
+      primesFrom n ps =
+         if isPrime n ps 
+            then n :+ primesFrom (n + 2) ps
+            else      primesFrom (n + 2) ps
+   } in
+      [2, 3] ++ primesFrom 5 primes;
+
+
+nthPrime :: Int -> Int;
+nthPrime n =
+  let {
+     nthPrime_ :: Exp [Int] -> Int -> Int;
+     nthPrime_ primes n =
+        case ::primes of {
+           x :+ xs -> if n > 1 then nthPrime_ xs (n - 1)
+                                    else x
+     }
+  } in
+    nthPrime_ primes n;
+
+maxPrime :: Int -> Int;
+maxPrime n =
+  let {
+     maxPrime_ :: Exp [Int] -> Int -> Int -> Int;
+     maxPrime_ primes n prv =
+       case ::primes of {
+          x :+ xs -> if x < n then maxPrime_ xs n x
+                              else prv
+       }
+  } in
+     maxPrime_ primes n 2;
+
+primeGaps :: Exp [(Int, Int)];
+primeGaps = variable
+   let {
+      gaps_ :: Exp [Int] -> Int -> [(Int, Int)];
+      gaps_ ps p =
+         case ::ps of {
+            q :+ qs -> (p, (q - p)) :+ (gaps_ qs q)
+         }
+   } in
+      #!(gaps_ (drop 1 primes) 2);
+
+maximalPrimeGaps :: Exp [(Int, Int)];
+maximalPrimeGaps = variable
+   let {
+      maximalPrimeGaps_ :: Exp [Int] -> Int -> Int -> [(Int, Int)];
+      maximalPrimeGaps_ ps p m =
+         case ::ps of { q :+ qs ->
+            let g :: Int = q - p
+               in  if g > m then (p, g) :+ maximalPrimeGaps_ qs q g
+                            else           maximalPrimeGaps_ qs q m
+         }
+   } in
+      #!(maximalPrimeGaps_ primes 2 0);
+
+}

@@ -1,0 +1,4 @@
+{ show 1; show '\n' };
+{ show "a"; show "b"; show '\n' };
+{ show (1 + 1); show '\n'; show (2 * 3); show '\n' };
+{ show (lengthString "hello"); show '\n' };

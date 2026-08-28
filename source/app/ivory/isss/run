@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd ../../../../scripts
+../build/gcc/x86-linux/app/ivory/isss "$@"

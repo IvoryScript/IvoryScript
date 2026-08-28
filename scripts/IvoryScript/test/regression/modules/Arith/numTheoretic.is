@@ -1,0 +1,13 @@
+show (gcd 54 24);      show '\n';
+show (gcd 0 17);       show '\n';
+show (gcd 12 8);       show '\n';
+show (lcm 4 6);        show '\n';
+show (lcm 54 24);      show '\n';
+show (fact 0);         show '\n';
+show (fact 1);         show '\n';
+show (fact 5);         show '\n';
+show (fact 10);        show '\n';
+show (fibonacci 0);    show '\n';
+show (fibonacci 1);    show '\n';
+show (fibonacci 10);   show '\n';
+show (fibonacci 20);   show '\n';

@@ -1,0 +1,12 @@
+show (sqrt 0.0);        show '\n';
+show (sqrt 1.0);        show '\n';
+show (sqrt 4.0);        show '\n';
+show (sqrt 2.0);        show '\n';
+show (exp 0.0);         show '\n';
+show (exp 1.0);         show '\n';
+show (log 1.0);         show '\n';
+show (sin 0.0);         show '\n';
+show (cos 0.0);         show '\n';
+show (pow 2.0 8.0);     show '\n';
+show (pow 2.0 10.0);    show '\n';
+show (pow 10.0 3.0);    show '\n';

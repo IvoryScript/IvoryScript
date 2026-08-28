@@ -1,0 +1,230 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory streams n-tuple instances for n between 4 and 10
+--
+-- Date: 25 October 2003
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module Tuple_4_10 where {
+
+-- Type: (a, b, c, d)
+
+instance StreamExtract (InputStream Byte), (c, d, e, f) where {
+   inline extract is = let {
+      c1 =  (#!(extract is)) :: c;
+      c2 =  (#!(extract is)) :: d;
+      c3 =  (#!(extract is)) :: e;
+      c4 =  (#!(extract is)) :: f;
+   } in
+      #!(¬^c1, ¬^c2, ¬^c3, ¬^c4)
+};
+
+instance StreamInsert (OutputStream Byte), (c, d, e, f) where {
+   inline insert os quadruple =
+      #!case quadruple of { (c1, c2, c3, c4) -> #!{
+         #!(insert os c1);
+         #!(insert os c2);
+         #!(insert os c3);
+         #!(insert os c4)
+     }}
+};
+
+-- Type: (a, b, c, d, e)
+
+instance StreamExtract (InputStream Byte), (c, d, e, f, g) where {
+   inline extract is = let {
+      c1 =  (#!(extract is)) :: c;
+      c2 =  (#!(extract is)) :: d;
+      c3 =  (#!(extract is)) :: e;
+      c4 =  (#!(extract is)) :: f;
+      c5 =  (#!(extract is)) :: g
+   } in
+      #!(¬^c1, ¬^c2, ¬^c3, ¬^c4, ¬^c5)
+};
+
+instance StreamInsert (OutputStream Byte), (c, d, e, f, g) where {
+   inline insert os quintuple =
+      #!case quintuple of { (c1, c2, c3, c4, c5) -> #!{
+         #!(insert os c1);
+         #!(insert os c2);
+         #!(insert os c3);
+         #!(insert os c4);
+         #!(insert os c5)
+     }}
+};
+
+-- Type: (a, b, c, d, e, f)
+
+instance StreamExtract (InputStream Byte), (c, d, e, f, g, h) where {
+   inline extract is = let {
+      c1 =  (#!(extract is)) :: c;
+      c2 =  (#!(extract is)) :: d;
+      c3 =  (#!(extract is)) :: e;
+      c4 =  (#!(extract is)) :: f;
+      c5 =  (#!(extract is)) :: g;
+      c6 =  (#!(extract is)) :: h
+   } in
+      #!(¬^c1, ¬^c2, ¬^c3, ¬^c4, ¬^c5, ¬^c6)
+};
+
+instance StreamInsert (OutputStream Byte), (c, d, e, f, g, h) where {
+   inline insert os sextuple =
+      #!case sextuple of { (c1, c2, c3, c4, c5, c6) -> #!{
+         #!(insert os c1);
+         #!(insert os c2);
+         #!(insert os c3);
+         #!(insert os c4);
+         #!(insert os c5);
+         #!(insert os c6);
+     }}
+};
+
+-- Type: (a, b, c, d, e, f, g)
+
+instance StreamExtract (InputStream Byte), (c, d, e, f, g, h, i) where {
+   inline extract is = let {
+      c1 =  (#!(extract is)) :: c;
+      c2 =  (#!(extract is)) :: d;
+      c3 =  (#!(extract is)) :: e;
+      c4 =  (#!(extract is)) :: f;
+      c5 =  (#!(extract is)) :: g;
+      c6 =  (#!(extract is)) :: h;
+      c7 =  (#!(extract is)) :: i
+   } in
+      #!(¬^c1, ¬^c2, ¬^c3, ¬^c4, ¬^c5, ¬^c6, ¬^c7)
+};
+
+instance StreamInsert (OutputStream Byte), (c, d, e, f, g, h, i) where {
+   inline insert os septuple =
+      #!case septuple of { (c1, c2, c3, c4, c5, c6, c7) -> #!{
+         #!(insert os c1);
+         #!(insert os c2);
+         #!(insert os c3);
+         #!(insert os c4);
+         #!(insert os c5);
+         #!(insert os c6);
+         #!(insert os c7);
+     }}
+};
+
+-- Type: (a, b, c, d, e, f, g, h)
+
+instance StreamExtract (InputStream Byte), (c, d, e, f, g, h, i, j) where {
+   inline extract is = let {
+      c1 =  (#!(extract is)) :: c;
+      c2 =  (#!(extract is)) :: d;
+      c3 =  (#!(extract is)) :: e;
+      c4 =  (#!(extract is)) :: f;
+      c5 =  (#!(extract is)) :: g;
+      c6 =  (#!(extract is)) :: h;
+      c7 =  (#!(extract is)) :: i;
+      c8 =  (#!(extract is)) :: j
+   } in
+      #!(¬^c1, ¬^c2, ¬^c3, ¬^c4, ¬^c5, ¬^c6, ¬^c7, ¬^c8)
+};
+
+instance StreamInsert (OutputStream Byte), (c, d, e, f, g, h, i, j) where {
+   inline insert os octuple =
+      #!case octuple of { (c1, c2, c3, c4, c5, c6, c7, c8) -> #!{
+         #!(insert os c1);
+         #!(insert os c2);
+         #!(insert os c3);
+         #!(insert os c4);
+         #!(insert os c5);
+         #!(insert os c6);
+         #!(insert os c7);
+         #!(insert os c8);
+     }}
+};
+
+-- Type: (a, b, c, d, e, f, g, h, i)
+
+instance StreamExtract (InputStream Byte), (c, d, e, f, g, h, i, j, k) where {
+   inline extract is = let {
+      c1 =  (#!(extract is)) :: c;
+      c2 =  (#!(extract is)) :: d;
+      c3 =  (#!(extract is)) :: e;
+      c4 =  (#!(extract is)) :: f;
+      c5 =  (#!(extract is)) :: g;
+      c6 =  (#!(extract is)) :: h;
+      c7 =  (#!(extract is)) :: i;
+      c8 =  (#!(extract is)) :: j;
+      c9 =  (#!(extract is)) :: k
+   } in
+      #!(¬^c1, ¬^c2, ¬^c3, ¬^c4, ¬^c5, ¬^c6, ¬^c7, ¬^c8, ¬^c9)
+};
+
+instance StreamInsert (OutputStream Byte), (c, d, e, f, g, h, i, j, k) where {
+   inline insert os nonuple =
+      #!case nonuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9) -> #!{
+         #!(insert os c1);
+         #!(insert os c2);
+         #!(insert os c3);
+         #!(insert os c4);
+         #!(insert os c5);
+         #!(insert os c6);
+         #!(insert os c7);
+         #!(insert os c8);
+         #!(insert os c9);
+     }}
+};
+
+-- Type: (a, b, c, d, e, f, g, h, i, j)
+
+instance StreamExtract (InputStream Byte), (c, d, e, f, g, h, i, j, k, l) where {
+   inline extract is = let {
+      c1 =  (#!(extract is)) :: c;
+      c2 =  (#!(extract is)) :: d;
+      c3 =  (#!(extract is)) :: e;
+      c4 =  (#!(extract is)) :: f;
+      c5 =  (#!(extract is)) :: g;
+      c6 =  (#!(extract is)) :: h;
+      c7 =  (#!(extract is)) :: i;
+      c8 =  (#!(extract is)) :: j;
+      c9 =  (#!(extract is)) :: k;
+      c10 = (#!(extract is)) :: l
+   } in
+      #!(¬^c1, ¬^c2, ¬^c3, ¬^c4, ¬^c5, ¬^c6, ¬^c7, ¬^c8, ¬^c9, ¬^c10)
+};
+
+instance StreamInsert (OutputStream Byte), (c, d, e, f, g, h, i, j, k, l) where {
+   inline insert os decuple =
+      #!case decuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) -> #!{
+         #!(insert os c1);
+         #!(insert os c2);
+         #!(insert os c3);
+         #!(insert os c4);
+         #!(insert os c5);
+         #!(insert os c6);
+         #!(insert os c7);
+         #!(insert os c8);
+         #!(insert os c9);
+         #!(insert os c10);
+     }}
+};
+
+}

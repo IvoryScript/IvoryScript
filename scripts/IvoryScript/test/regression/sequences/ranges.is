@@ -1,0 +1,9 @@
+show (listFromTo 1 1 5);              show '\n';
+show (listFromTo 0 2 10);             show '\n';
+show (listFromTo 10 (-1) 1);          show '\n';
+show (listFromTo 5 5 5);              show '\n';
+show (take 6 (listFrom 1 1));         show '\n';
+show (take 5 (listFrom 0 3));         show '\n';
+show (take 4 (repeat 42));            show '\n';
+show (replicate 0 5);                 show '\n';
+show (take 8 (cycle [1, 2, 3]));      show '\n';

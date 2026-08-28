@@ -1,0 +1,23 @@
+-- User-guide regression: recursive inner helper over Exp (Tree a).
+--
+-- Expected output:
+-- [1,2,4,7,9]
+
+let {
+   t :: Exp (Tree Int) = Branch (Branch (Leaf 4) (Leaf 7))
+                         (Branch (Leaf 2) (Branch (Leaf 9) (Leaf 1)));
+
+   inOrder :: Exp (Tree a) -> [a];
+   inline inOrder tr =
+      let {
+         inOrder_ :: Exp (Tree a) -> [a];
+         inOrder_ tr =
+            case #!tr of {
+               Empty        -> [];
+               Leaf x       -> [x];
+               Branch lt rt -> inOrder_ lt ++ inOrder_ rt
+            }
+      } in
+         inOrder_ tr
+} in
+   mergeSort (inOrder t)

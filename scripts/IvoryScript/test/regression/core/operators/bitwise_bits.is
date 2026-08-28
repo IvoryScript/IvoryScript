@@ -1,0 +1,23 @@
+-- Bitwise Bits operator regression.
+--
+-- Expected output:
+-- c0
+-- fc
+-- 3c
+-- ffffffff
+-- f0f0f0f0
+-- ff0000
+-- ff00
+-- aa55
+-- 0
+
+show (0xf0 #& 0xcc);                                 show '\n';
+show (0xf0 #| 0xcc);                                 show '\n';
+show (0xf0 #^ 0xcc);                                 show '\n';
+show (#¬ 0x0);                                       show '\n';
+show (#¬ 0x0f0f0f0f);                                show '\n';
+show (0xff << 16);                                   show '\n';
+show (0xff0000 >> 8);                                show '\n';
+show ((0xff00 #& 0xaaaa) #| (0x00ff #& 0x5555));     show '\n';
+show ((0xff << 16) #^ 0xff0000);                     show '\n';
+

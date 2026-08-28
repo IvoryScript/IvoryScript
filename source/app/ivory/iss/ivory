@@ -1,0 +1,134 @@
+#!/bin/bash
+
+set -u
+
+# --- 1. Detect Host Machine Architecture ---
+ARCH_TYPE=$(uname -m)
+
+# --- 2. Map Native Native 64-bit / 32-bit Host Profiles ---
+case "$ARCH_TYPE" in
+   x86_64)
+      DEFAULT_ARCH="x86_64"
+      ;;
+   armv7l)
+      DEFAULT_ARCH="arm-linux"
+      ;;
+   aarch64)
+      DEFAULT_ARCH="aarch64-linux"
+      ;;
+   *)
+      echo "Unsupported host architecture: $ARCH_TYPE" >&2
+      exit 1
+      ;;
+esac
+
+# --- 3. Evaluate 32-Bit Forced Optimization Override ---
+# Checks if IVORYSCRIPT_32 is set to 1 or true via your execution line
+if [ "${IVORYSCRIPT_32:-0}" = "1" ] || [ "${IVORYSCRIPT_32:-0}" = "true" ]; then
+   case "$ARCH_TYPE" in
+      x86_64)
+         # 32-bit application folder convention on an Intel Host
+         BUILD_ARCH="x86-linux" 
+         ;;
+      armv7l|aarch64)
+         # 32-bit application folder convention on an ARM Host
+         BUILD_ARCH="arm-linux"
+         ;;
+   esac
+else
+   # If no override is declared, scale directly to native system defaults
+   BUILD_ARCH="$DEFAULT_ARCH"
+fi
+
+# --- 4. Path and Workdir Parameter Initialization ---
+ISS="../../build/gcc/$BUILD_ARCH/app/ivory/iss"
+MODULE_DIR="../../../../scripts/IvoryScript"
+PROFILE_DIR="../../source/app/ivory/iss/config"
+PROFILE="${1:-}"
+PROFILE_FILE="$PROFILE_DIR/$PROFILE"
+
+cd "$MODULE_DIR" || exit 1
+
+# Ensure the targeted application folder layout contains a compiled runnable binary
+if [ ! -x "$ISS" ]; then
+   echo "Ivory System executable not found or not executable at: $ISS" >&2
+   exit 1
+fi
+
+# --- 5. Coprocess Context Engine Start ---
+coproc ISSPROC { "$ISS" 2>&1; }
+
+exec {ISS_OUT}<&${ISSPROC[0]}
+exec {ISS_IN}>&${ISSPROC[1]}
+
+wait_for_prompt() {
+   local ch
+   local pending=""
+
+   while IFS= read -r -n 1 -u $ISS_OUT ch; do
+      pending+="$ch"
+      case "$pending" in
+         "> ")
+            return 0
+            ;;
+         ">")
+            ;;
+         *)
+            printf '%s' "$pending"
+            pending=""
+            ;;
+      esac
+   done
+
+   return 1
+}
+
+send_cmd() {
+   printf '%s\n' "$1" >&$ISS_IN
+   wait_for_prompt || return 1
+}
+
+wait_for_prompt || exit 1
+
+# --- 6. Execution Module Injection Block ---
+if [ -n "$PROFILE" ]; then
+   if [ ! -f "$PROFILE_FILE" ]; then
+      echo "Profile file not found: $PROFILE_FILE" >&2
+      exit 1
+   fi
+
+   while IFS= read -r module || [ -n "$module" ]; do
+      case "$module" in
+         "" | \#*)
+            continue
+            ;;
+      esac
+      send_cmd ":file \"modules/$module.is\"" || exit 1
+   done < "$PROFILE_FILE"
+fi
+
+printf '> '
+
+# --- 7. Interactive Session ---
+cat <&"$ISS_OUT" &
+ISS_OUT_PID=$!
+
+# Explicitly read interactive input from the terminal.
+cat </dev/tty >&"$ISS_IN" &
+ISS_IN_PID=$!
+
+# Wait for IvoryScript itself to terminate.
+wait "$ISSPROC_PID"
+ISS_STATUS=$?
+
+# Stop the input forwarder, which may still be waiting on the terminal.
+kill "$ISS_IN_PID" 2>/dev/null
+wait "$ISS_IN_PID" 2>/dev/null
+
+# Drain any remaining IvoryScript output.
+wait "$ISS_OUT_PID" 2>/dev/null
+
+exec {ISS_IN}>&-
+exec {ISS_OUT}<&-
+
+exit "$ISS_STATUS"

@@ -1,0 +1,8 @@
+show (take 8 (iterate ((*) 2) 1));  show '\n';
+show (take 5 positiveInts);         show '\n';
+show (take 7 factorials);           show '\n';
+show (take 8 fibonaccis);           show '\n';
+show (take 10 primes);              show '\n';
+show (nthPrime 1);                  show '\n';
+show (nthPrime 5);                  show '\n';
+show (nthPrime 10);                 show '\n';

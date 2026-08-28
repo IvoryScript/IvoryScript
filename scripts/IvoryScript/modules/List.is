@@ -1,0 +1,633 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory list functions
+--
+-- Note
+--    A number of functions below are polymorphic for Exp [a] or [a]
+--    but a lazy alternative is included to avoid some cases of
+--    unnecessary closure formation.
+--
+-------------------------------------------------------------------------------
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module List where {
+
+type List a = Nil | Cons a (Exp [a]);
+
+
+Nil :: Ptr Void;
+inline Nil = #!Null;
+
+Cons :: a -> Exp [a] -> Ptr (a, Exp [a]);
+--inline Cons x xs = Ptr ¬^(x, xs)
+inline Cons = #!(\x xs -> #!(Ptr ¬^(#!(x, xs))))
+matching {inline \repr -> case repr of {Ptr (x, _)  -> x};
+          inline \repr -> case repr of {Ptr (_, xs) -> xs}};
+
+unmappedCons :: a -> Exp [a] -> [a];
+inline unmappedCons x xs = ~Cons #!(Ptr ¬^(#!(¬^x, ¬^xs)));
+
+
+-- Head item
+
+hd :: c -> d;
+inline hd l =
+   #!case ::l of {
+      [] ->       #!(error "hd: Empty list");
+      x :+ _ ->   x
+   };
+
+
+-- Tail item(s)
+
+tl :: c -> d;
+inline tl l =
+   #!case ::l of {
+      [] -> #!(error "tl: Empty list");
+      _ :+ xs -> (::xs)
+   };
+   
+-- Prefix - take
+
+takeList :: Int -> c -> c;
+inline takeList n l =
+   let {
+      takeList_ :: Int -> c -> c;
+      takeList_ n l =
+         if n <= 0 then [] else
+            case ::l of {
+               [] ->       [];
+               x :+ xs ->  x :+ takeList_ (n - 1) (::xs)
+            }
+   } in
+      takeList_ n l;
+
+
+takeListNonStrict :: Int -> Exp [c] -> Exp [c];
+inline takeListNonStrict n l =
+   let {
+      takeList_ :: Int -> [c] -> [c];
+      takeList_ n l =
+         if n <= 0 then [] else
+            case l of {
+               [] ->       [];
+               x :+ xs ->  x :+ takeList_ (n - 1) #!xs
+            }
+   } in
+      takeList_ n #!l;
+
+-- Prefix - take while predicate
+
+takeWhile :: (a -> Bool) -> [a] -> [a];
+inline takeWhile p l =
+   let {
+      takeWhile_ :: (a -> Bool) -> [a] -> [a];
+      takeWhile_ p l =
+         case l of {
+            [] ->       [];
+            x :+ xs ->  if p x then x :+ takeWhile_ p (::xs)
+                               else [];
+         }
+   } in
+      takeWhile_ p l;
+
+
+-- Suffix - dropList
+
+dropList :: Int -> c -> c;
+inline dropList n l =
+   let {
+      dropList_ :: Int -> c -> c;
+      dropList_ n l =
+         if n <= 0 then l else
+            case ::l of {
+               [] ->       l;
+               x :+ xs ->  dropList_ (n - 1) (::xs);
+         }
+   } in
+      dropList_ n l;
+
+dropListNonStrict :: Int -> Exp [c] -> Exp [c];
+inline dropListNonStrict n l =
+   let {
+      dropList_ :: Int -> [c] -> [c];
+      dropList_ n l =
+         if n <= 0 then l else
+            case l of {
+               [] ->       l;
+               x :+ xs ->  dropList_ (n - 1) #!xs;
+         }
+   } in
+      dropList_ n #!l;
+
+-- Suffix - drop while predicate
+
+dropWhile :: (a -> Bool) -> [a] -> [a];
+inline dropWhile p l =
+   let {
+      dropWhile_ :: (a -> Bool) -> [a] -> [a];
+      dropWhile_ p l =
+         case l of {
+            [] ->       [];
+            x :+ xs ->  if p x then dropWhile_ p (::xs)
+                               else l;
+         }
+   } in
+      dropWhile_ p l;
+
+-- lengthList
+
+lengthList :: b -> Int;
+inline lengthList l =
+   let { lengthList_ :: b -> Int -> Int;
+         lengthList_ l acc =
+            case ::l of {
+               [] ->       acc;
+               _ :+ xs ->  lengthList_ (::xs) (acc + 1)
+            }
+   } in
+      lengthList_ l 0;
+
+lengthList__ :: [Int] -> Int;
+inline lengthList__ l =
+   let { lengthList_ :: [Int] -> Int -> Int;
+         lengthList_ l acc =
+            case l of {
+               [] ->       acc;
+               _ :+ xs ->  lengthList_ (::xs) (acc + 1)
+            }
+   } in
+      lengthList_ l 0;
+
+lengthListStrict :: [a] -> Int;
+inline lengthListStrict l =
+   let { lengthListStrict_ :: [a] -> Int -> Int;
+         lengthListStrict_ l acc =
+            case l of {
+               [] ->       acc;
+               _ :+ xs ->  lengthListStrict_ (::xs) (acc + 1)
+            }
+   } in
+      lengthListStrict_ l 0;
+
+
+-- Concatanate two lists
+
+concatList :: Exp [a] -> Exp [a] -> Exp [a];
+inline concatList x y =
+   #!(let (concatList_ :: Exp [a] -> Exp [a] -> Exp [a]) x y =
+      #!(case #!x of { [] ->      y;
+                    z :+ zs -> z :+ #!(concatList_ zs y) })
+   in
+      #!(concatList_ x y));
+
+concatList_ :: [a] -> [a] -> [a];
+inline concatList_ x y =
+   #!(let (concatList_ :: [a] -> [a] -> [a]) x y =
+      #!(case x of { [] ->      y;
+                  z :+ zs -> #!(z :+ (concatList_ (#!zs) y)) })
+   in
+      #!(concatList_ x y));
+
+
+{-
+-- listHasItem: test for one or more occurrences of list item
+-- for a given predicate
+
+listHasItem :: (a -> a -> Bool) -> a -> [a] -> Bool;
+inline listHasItem pred x zs =
+   let {
+      hasItem_ :: (a -> a -> Bool) -> a -> [a] -> Bool;
+      hasItem_ pred x zs =      
+         case zs of {
+            []       -> False;
+            y :+ ys  -> if pred x y then True
+                                    else hasItem_ pred x (#!ys)
+         }
+   } in
+      hasItem_ pred x zs;
+
+
+-- noDupsInList: test a list for no duplicate items
+-- according to a given predicate
+
+noDupsInList :: (a -> a -> Bool) -> [a] -> Bool;
+inline noDupsInList pred ys =
+   let {
+      noDups_ :: (a -> a -> Bool) -> [a] -> Bool;
+      noDups_ pred ys =      
+         case ys of {
+            []       -> True;
+            x :+ xs  ->
+               let tail = #!xs
+               in
+                  (¬(listHasItem pred x tail)) & (noDups_ pred tail)
+         }
+   } in
+      noDups_ pred ys;
+
+      
+-- uniqueList: return a unique list according to a given predicate
+--             for any duplicated items, only the last is included
+-- (scripted to avoid reconstructing the list if no duplicates)
+
+uniqueList :: (a -> a -> Bool) -> [a] -> [a];
+inline uniqueList pred ys =
+   let {
+      unique_ :: (a -> a -> Bool) -> [a] -> [a];
+      unique_ pred ys =      
+         case ys of {
+            []       -> [];
+            x :+ xs  ->
+               let tail :: [a] = #!xs in
+                  if listHasItem pred x tail then
+                     unique_ pred tail
+                  else
+                     if noDupsInList pred tail then ys
+                        else x :+ (unique_ pred tail)
+         }
+   } in
+      unique_ pred ys;
+-}
+
+
+-- Reverse a list
+
+reverseList :: c -> c;
+inline reverseList l =
+   #!(let {
+      reverse_:: c -> c -> c;
+      reverse_ l lRev =
+         #!case ::l of {
+            [] ->       lRev;
+            x :+ xs ->  #!(reverse_ (::xs) (x :+ (::lRev))) }
+   } in
+      #!(reverse_ l []));
+
+-- Return list of value replicated n times
+
+replicate :: a -> Int -> b;
+inline replicate x n =
+   let { replicate_ :: a -> Int -> b;
+         replicate_ x n = if n = 0 then []
+                                   else x :+ (replicate_ x (n - 1))
+   } in
+      replicate_ x n;
+
+
+-- Return infinite list of value repeated
+
+repeat :: a -> Exp [a];
+inline repeat x =
+   let (repeat_ :: a -> Exp [a]) x =  x :+ (repeat_ x)
+   in
+      repeat_ x;
+
+
+-- Return list repeated infinitely
+
+cycle :: b -> b;
+inline cycle l =
+   let (cycle_ :: b -> b) l =
+      let ls :: b = l ++ (cycle_ l) in !ls
+   in
+      cycle_ l;
+
+{-
+cycle :: b -> b;
+inline cycle l =
+   let (cycle_:: b ->b -> b) x y =
+      case ::x of { [] ->      cycle_ y y;
+                    z :+ zs -> z :+ (cycle_ zs y) }
+               
+   in
+      #!(cycle_ l l);
+
+cycle :: b -> b;
+inline cycle l =
+   case ::l of {
+      [] -> [];
+      otherwise -> let ls = l ++ ls in ls
+   }
+-}
+
+-- Simple numeric sequences
+
+listFrom :: a -> a -> b;
+inline
+listFrom s step  =
+   let (listFrom_ :: a -> a -> [a]) s step =
+      s :+ (listFrom_ (s + step) step)
+   in
+      #!(listFrom_ s step);
+
+listFromX :: a -> a -> Exp [a];
+inline
+listFromX s step  =
+   let (listFrom_ :: a -> a -> [a]) s step =
+      s :+ (listFrom_ (s + step) step)
+   in
+      listFrom_ s step;
+
+listFromTo :: a -> a -> a -> b;
+inline
+listFromTo s step e =
+   let (listFromTo_ :: a -> a -> a -> [a]) s step e =
+      if (if step > 0 then s > e else s < e) then []
+         else s :+ (listFromTo_ (s + step) step e)
+   in
+      listFromTo_ s step e;
+
+listFromToX :: a -> a -> a -> Exp [a];
+inline
+listFromToX s step e =
+   let (listFromTo_ :: a -> a -> a -> [a]) s step e =
+      if s > e then []
+               else s :+ (listFromTo_ (s + step) step e)
+   in
+      listFromTo_ s step e;
+
+listFromToXX :: a -> a -> a -> [a];
+inline
+listFromToXX s step e =
+   let (listFromTo_ :: a -> a -> a -> [a]) s step e =
+      if s > e then []
+               else s :+ (listFromTo_ (s + step) step e)
+   in
+      listFromTo_ s step e;
+
+
+-- Merge two ordered lists
+
+merge :: b -> b -> b;
+inline merge lx ly = 
+   #!(let {
+      merge_ :: b -> b -> b;
+      merge_ lx ly =
+         case ::lx of {
+            [] -> ly;
+            x :+ xs -> case ::ly of {
+               [] -> lx;
+               y :+ ys -> if x <= y then x :+ (merge_ (::xs) ly)
+                                    else y :+ (merge_ lx (::ys))
+            }
+         }
+      }
+   in
+      merge_ lx ly);
+
+-- Merge sort a list
+
+mergeSort :: [c] -> [c];
+inline mergeSort l =
+   #!(let {
+      mergeSort_ :: [c] -> [c];
+      mergeSort_ l =
+         let len :: Int = lengthList l
+         in
+            if len < 2 then l
+            else
+               let p :: Int = len div 2
+               in
+                  #!(merge #!(mergeSort_ #!(takeList p l)) #!(mergeSort_ #!(dropList p l)))
+   } in
+      mergeSort_ l);
+
+
+
+{- Polymorphic for [a] and Exp [a]
+
+   T.B.D. Investigate issues with excessive closure formation
+
+mergeSort :: c -> c;
+inline mergeSort l =
+   #!(let {
+      mergeSort_ :: c -> c;
+      mergeSort_ l =
+         let len :: Int = length (::l)
+         in
+            if len < 2 then l
+            else
+               let p :: Int = len div 2
+               in
+                  #!(merge (mergeSort_ #!(take p l)) (mergeSort_ #!(drop p l)))
+   } in
+      mergeSort_ l);
+-}
+
+
+{- show non-strict -}
+{- ???
+showLazyList :: [Exp a] -> Void;
+inline showLazyList l =
+   let (showSuffix::[Exp a] -> Void) listRHS =
+      case listRHS of {
+            [] ->       show ']';
+            x :+ xs ->  { show ','; show x; showSuffix #!xs }
+      } 
+   in
+      case l of {
+         [] ->       show "[]";
+         x :+ xs ->  { show '['; show x; showSuffix #!xs }
+      };
+-}
+
+instance Env [b] where {
+   inline needsEnv list = True;  
+   inline mapToEnv list dstEnv = 
+      let env::Env = consEnv  
+      in {
+         setEnv dstEnv;
+         let res :: [b] = 
+            case list of {
+               [] -> [];
+               Cons x xs -> ~Cons #!(Ptr ¬^(#!(¬^(#!(mapToEnv x  dstEnv)),
+                                               ¬^(#!(mapToEnv xs dstEnv)))));
+            }
+         in {
+            setEnv env;
+            res
+         }
+      }
+};
+
+instance Mark_GC [b] where {
+   inline mark_GC list  =
+      case list of {
+         [] -> Void;
+         ~Cons repr -> 
+            case repr of {Ptr (x, xs) ->
+               if markPtr_GC repr then {
+                  mark_GC x;
+                  mark_GC xs
+               }
+            }
+      }
+};
+
+instance StreamExtract InputStream Byte, [c] where {
+   inline extract is =
+      if ((#!(extract is)) :: Int) = 0
+         then Nil
+         else let {
+                 x =   (#!(extract is))::c;
+                 xs =  (#!(extract is))::Exp [c]
+              } in
+                 unmappedCons x xs
+};
+
+instance StreamInsert OutputStream Byte, [c] where {
+inline
+   insert os list = case list of {
+      [] ->       insert os #0;
+      x :+ xs ->  { insert os #1; insert os x; insert os xs }
+   }
+};
+
+instance StreamInsert OutputStream Char, [c] where {
+   inline insert os list = let {
+      (insertItem :: OutputStream Char -> c -> Void) os x = insert os (::x);
+      (insertSuffix :: OutputStream Char -> [c] -> Void) os listRHS =
+         case listRHS of {
+             [] ->      insert os ']';
+             x :+ xs -> {
+                insert os ',';
+                insertItem os x;
+                insertSuffix os (#!xs) }
+         }
+   } in
+      case list of {
+         [] ->       insert os "[]";
+         x :+ xs ->  {
+            insert os '[';
+            insertItem os x;
+            insertSuffix os (#!xs) }
+      }        
+};
+
+subordinate instance StreamInsert OutputStream Char, Exp [c] where {
+   inline insert os list = insert os #!list
+};
+
+{-
+instance Serialisable Plain [b] where
+   inline insert os list =
+      case list of {
+         Plain [] -> insert os (Plain #0);
+         Plain ~Cons (Plain Ptr (Plain (x :: Plain b, xs :: Plain (Exp [b]))))  -> {
+            insert os (Plain #1);
+            insert os x;
+            insert os xs;
+         }
+      }
+};
+
+-}
+
+
+instance Textual Exp [b] where {
+   inline stringify list = let {
+      (stringifyItem :: b -> String) x = stringify (::x);
+      (stringifySuffix :: Exp [b] -> String) listRHS =
+         case ::listRHS of {
+             [] -> ']';
+             x :+ xs ->
+                ',' ++
+                (stringifyItem x) ++
+                (stringifySuffix xs)
+         }
+   } in
+      case ::list of {
+         [] -> "[]";
+         x :+ xs ->
+            '[' ++
+            (stringifyItem x) ++
+            (stringifySuffix xs)
+      }        
+};
+
+instance Show [b] where {
+   inline show list = let {
+      (showItem :: b -> Void) x = show (::x);
+      (showSuffix :: [b] -> Void) listRHS =
+         case listRHS of {
+             [] ->      show ']';
+             x :+ xs -> {
+                show ',';
+                showItem x;
+                showSuffix (#!xs) }
+         }
+   } in
+      case list of {
+         [] ->       show "[]";
+         x :+ xs ->  {
+            show '[';
+            showItem x;
+            showSuffix (#!xs) }
+      }        
+};
+
+subordinate instance Show Exp [b] where {
+   inline show list = show #!list
+};
+
+-- Instances of Seq (primarily lazy)
+
+instance Seq Exp [b] where {
+   inline length =   lengthList;
+   inline tail =     tl;
+   inline take =     takeListNonStrict;
+   inline drop =     dropListNonStrict;
+   inline (++) =     concatList
+};
+
+subordinate instance Seq [b] where {
+   inline length =   lengthList;
+   inline tail =     tl;
+   inline take =     takeList;
+   inline drop =     dropList;
+   inline (++) =     concatList_
+};
+
+instance IndexableSeq Exp [b], b where {
+   inline getAt l i = hd (dropListNonStrict i l);
+   inline head = hd
+};
+
+subordinate instance IndexableSeq [b], b where {
+   inline getAt l i = hd (dropList i l);
+   inline head = hd
+};
+
+instance ReverseableSeq Exp [b] where {
+   inline reverse =  reverseList;
+};
+
+subordinate instance ReverseableSeq [b] where {
+   inline reverse =  reverseList;
+};
+
+}      

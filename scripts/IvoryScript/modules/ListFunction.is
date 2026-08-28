@@ -1,0 +1,245 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory list operations involving functions
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module ListFunction where {
+
+-- filter: a list with elements filtered by a predicate
+
+filter :: (a -> Bool) -> b -> b;
+inline filter p l =
+   #!(let {
+      filter_:: (a -> Bool) -> c -> c;
+      filter_ p l =
+         case l of {
+            [] ->       l;
+            x :+ xs ->  #!(if p x then x :+ (filter_ p (::xs))        
+                                  else filter_ p (::xs)) }
+   } in
+      filter_ p (::l));
+     
+-- foldl: accumulate elements of a list with a function (group to the left)
+
+foldl :: (b -> a -> b) -> b -> [a] -> b;
+inline foldl f z l =
+   #!(let { foldl_ :: (b -> a -> b) -> b -> [a] -> b;
+         foldl_ f z l =
+            case ::l of {
+               [] -> z;
+               x :+ xs -> foldl_ f (f z x) (::xs) }
+   } in
+      foldl_ f z l);
+
+
+-- foldr: accumulate elements of a list with a function (group to the right)
+
+foldr :: (a -> b -> b) -> b -> c -> b;
+inline foldr f z l  =
+   #!(let { foldr_ :: (a -> b -> b) -> b -> c -> b;
+         foldr_ f z l  =
+            case ::l of {
+               [] ->      z;
+               x :+ xs -> f x (foldr_ f z xs) }
+   } in
+      foldr_ f z l);
+    
+-- iterate: an infinite list of elements where
+-- a) The first element is x
+-- b) Successive elements are f applied to the previous element
+
+iterate :: (a -> a) -> a -> b;
+inline iterate f x =
+   #!(let {
+      iterate_:: (a -> a) -> a -> c;
+      iterate_ f x = #!(x :+ (iterate_ f (f x)))
+   } in
+      iterate_ f x);
+
+iterateX :: (a -> a) -> a -> Exp [a];
+inline iterateX f x =
+   let {
+      iterate_:: (a -> a) -> a -> [a];
+      iterate_ f x = x :+ (iterate_ f (f x))
+   } in
+      iterate_ f x;
+  
+-- mapf: a list with a function applied to all items
+-- Polymorphic for Exp [a] -> Exp [b] or [a] -> [b]
+
+mapf :: (a -> b) -> c -> d;
+inline mapf f l =
+   #!(let (mapf_ :: (a -> b) -> c -> [b]) f l =
+      case (::l) of {
+         [] ->       [];
+         x :+ xs ->  (f x) :+ (mapf_ f (::xs)) }
+   in
+      mapf_ f l);
+
+foreach :: (a -> Void) -> b -> Void;
+inline foreach f l =
+   let (foreach_ :: (a -> Void) -> b -> Void) f l =
+      case (::l) of {
+         [] ->       #!Void;
+         x :+ xs ->  { f x; foreach_ f (::xs) } }
+   in
+      foreach_ f l;
+
+evalList :: a -> a;
+inline evalList l =
+   let (evalList_ :: a -> Void) l =
+      case (::l) of {
+         [] ->       #!Void;
+         x :+ xs ->  evalList_ (::xs) }
+   in {
+      evalList_ l;
+      l
+   };
+
+-- flatten: flattens a list of lists into a single list
+
+flatten :: a -> b;
+inline flatten xss =
+    #!(let { flatten_ :: a -> b;
+      flatten_ xss =
+         #!(case ::xss of {
+            [] -> [];
+            xs :+ xss_ -> (::xs) ++ (flatten_ (::xss_))
+         })
+   } in
+      flatten_ xss);
+
+{-
+flattenX :: [[a]] -> [a];
+inline flattenX xss =
+    #!(let { flatten_ :: [[a]] -> [a];
+      flatten_ xss =
+         #!(case xss of {
+            [] -> [];
+            xs :+ xss_ -> xs ++ #!(flatten_ #!xss_)
+         })
+   } in
+      #!(flatten_ xss));
+
+
+flattenY :: Exp [Exp [a]] -> Exp [a];
+inline flattenY xss =
+   #!(let { flatten_ :: Exp [Exp [a]] -> Exp [a];
+      flatten_ xss =
+         #!(case #!xss of {
+            [] -> [];
+            xs :+ xss_ -> xs ++ #!(flatten_ xss_)
+         })
+   } in
+      #!(flatten_ xss));
+-}
+
+
+-- flatMap: applies a function to each element of a list where
+-- the function returns a list, then flattens the result into a single list.
+-- Equivalent to: flatten (mapf f xs)
+
+-- 'c' may be [a] or Exp [a], similarly 'b' may be [b] or Exp [b]
+
+flatMap :: (a -> b) -> c -> d;
+inline flatMap f xs = #!(flatten #!(mapf f xs));
+
+-- span: (<prefix sharing common predicate>, <remainder of list>)
+-- e.g. span (\x -> x = 1) [1,1,2,3,3,4] -> [[1,1], [2,3,3,4]]
+
+span :: (a -> Bool) -> [a] -> ([a], [a]);
+inline span p l =
+   #!(let { 
+      span_ ::  (a -> Bool) -> [a] -> ([a], [a]);
+      span_ p l =
+         case l of {
+            [] -> ([], []);
+            x :+ xs -> if (p x) then
+                          let t :: ([a], [a]) = span_ p (::xs)
+                          in
+                            (x :+ (fst t), snd t)
+                       else
+                          ([], l)
+         }
+   } in
+      span_ p l);
+
+{-
+span :: (a -> Bool) -> b -> (b, b);
+inline span p l =
+   #!(let { 
+      span_ ::  (a -> Bool) -> b -> (b, b);
+      span_ p l =
+         case ::l of {
+            [] -> ([]::b, []::b);
+            x :+ xs -> if (p x) then
+                          let t :: (b, b) = span_ p xs
+                          in
+                            (x :+ (fst t), snd t)
+                       else
+                          ([]::b, l)
+         }
+   } in
+      span_ p l);
+-}
+-- groupBy: list of lists grouped by common predicate
+
+-- e.g. groupBy (=) [1,1,2,3,3,4] -> [[1,1], [2], [3,3], [4]]
+-- let { f :: Int -> Int -> Bool; f x y = x = y } in groupBy f [1,1,2,3,3,4]
+-- let { f :: Char -> Char -> Bool; f x y = x = y } in groupBy f (chars "Missippi")
+{-
+groupBy :: (a -> a -> Bool) -> b -> c;
+inline groupBy eq l =
+   #!(let { 
+      groupBy_ ::  (a -> a -> Bool) -> b -> c;
+      groupBy_ eq l =
+         #!(case ::l of {
+            [] -> []::c;
+            x :+ xs -> 
+               #!(let t :: (b, b) = span (\(y :: a) -> eq x y) xs            
+               in 
+                  (x :+ (fst t)) :+ (groupBy_ eq (snd t)))
+         })
+   } in
+      groupBy_ eq l);
+-}
+
+groupBy :: (a -> a -> Bool) -> [a] -> [[a]];
+inline groupBy eq l =
+   let { 
+      groupBy_ ::  (a -> a -> Bool) -> [a] -> [[a]];
+      groupBy_ eq l =
+         case l of {
+            [] -> [];
+            x :+ xs -> 
+               let t :: (b, b) = span (\(y :: a) -> eq x y) (::xs)            
+               in 
+                  (x :+ (fst t)) :+ (groupBy_ eq (snd t))
+         }
+   } in
+      groupBy_ eq l;
+}

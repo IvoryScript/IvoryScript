@@ -1,0 +1,1332 @@
+-------------------------------------------------------------------------------
+--
+-- (c) Copyright 2000-2026 by Alasdair Scott
+--
+-- Ivory system prelude
+--
+-- Note
+--    Built-in functions should not be declared here.  They will be declared
+--    and defined implicitly by the run-time system.
+--  
+-- Original date: 25 October 2003
+--
+-------------------------------------------------------------------------------
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module Prelude where {
+
+type Env = Env Int;
+type Plain a = Plain a;
+type Ptr a = Null | Ptr a;
+type Bool = False | True;
+type Array a = Array [a];
+type Ordering = LT | EQ | GT;
+type Maybe a = Nothing | Just a;
+-- type Uneval a = Uneval (Exp a);
+type When = After | Before;
+
+{-
+primitive primPtr :: a -> PrimPtr a
+primitive primDePtr :: PrimPtr a -> a;
+Ptr :: a -> PrimPtr a;
+inline Ptr x = primPtr x
+matching { inline primDePtr };
+-}
+
+primitive castPtr :: Ptr a -> Ptr b;
+
+Plain :: a -> a;
+inline Plain x = x
+matching { inline id };
+primitive fromPlain :: Plain a -> Env -> a;
+
+Just :: a -> a;
+inline Just x = x
+matching { inline id };
+
+isNothing :: Maybe a -> Bool;
+inline isNothing x = case x of { Nothing -> True; Just (_::a) -> False };
+
+{-
+Uneval :: Exp a -> Exp a;
+inline Uneval e = e
+matching { inline id };
+-}
+
+primitive typeOf        :: a -> Type;
+primitive envOf         :: a -> Env;            -- T.B.D. declare as class method
+primitive sizeOf        :: Type -> Int;
+primitive tagOf         :: a -> Tag;
+primitive castTag       :: Tag -> a;            -- 'a' should be atomic
+primitive constructorString :: a -> String;
+primitive constructFromName :: Name -> a;
+primitive constructFromString :: String -> a;
+primitive error         :: String -> a;
+primitive assignAtPrim  :: a -> Ptr a -> Void;  -- Primitive pointer value assignment (unmapped)
+
+-- Allocate pointer array, e.g. allocPtrArray nElems
+primitive allocPtrArray :: Int -> Ptr (Array a);
+-- Copy range of elements from one pointer array to another
+-- e.g. copyPtrArray nElems ptrArr1 index1 ptrArr2 index2 
+primitive copyPtrArray :: Int -> Ptr a -> Int -> Ptr a -> Int -> Void;
+primitive getAtPtrArray :: Ptr (Array a) -> Int -> a;
+primitive putAtPtrArray :: Ptr (Array a) -> Int -> a -> Void;
+
+primitive getAtPlainPtrArray :: Plain (Ptr (Array a)) -> Int -> (Plain a);
+
+
+-- Identity
+id :: a -> a;
+inline id x = x;
+
+-- Reduction
+reduce :: Exp a -> a;
+inline reduce x = #!x;
+
+-- Suppression
+ignore :: a -> Void;
+inline ignore x = case (indispensable !x) of {(_::a) -> #!Void };
+
+-- The following is intended only for interal use
+-- to access the current closure variable
+
+primitive closure__ :: a;
+
+-- Inverse reduction (wraps a value with a closure)
+
+mkThunk :: a -> (-> a); 
+inline mkThunk x = variable (\-> x);
+
+primitive fromThunk :: (-> a) -> Exp a;
+
+mkExpr :: a -> Exp a;
+inline mkExpr x = fromThunk (mkThunk x);
+
+-- Internal function to generate an update thunk
+-- Created in original environment with mapped value
+
+genUpdateThunk :: (-> a) -> a -> (-> a); 
+inline genUpdateThunk srcCell x  =
+   let {
+      srcEnv :: Env = envOf srcCell;
+      mkThunk_ :: a -> (-> a); 
+      mkThunk_ x = #!(mkThunk x)
+   } in
+      if srcEnv = consEnv then
+         #!(mkThunk_ x)
+      else
+         let env :: Env = consEnv  
+         in {
+            setEnv srcEnv;
+            let res :: (-> a) = #!(mkThunk_ x) in {
+               setEnv env;
+               res
+            }
+         };
+
+-- Function composition
+
+compose :: (b -> c) -> (a -> b) -> (a -> c);
+inline compose f g  = \x -> f (g x);
+
+-- Conditional
+primitive cond :: Bool -> a -> a -> a;
+--cond ec et ef = if ec then et else ef;
+
+-- Sequential
+--seq :: Void -> a -> a;
+--seq :: Void -> a -> a = \e1 :: Void e2 :: a -> {e1; e2};
+
+-- Alternative
+-- Built-in, so not defined
+-- fatBar :: a -> a -> a;
+
+-- General fixed point combinator
+fix :: (a -> a) -> a;
+inline fix f = let x = f x in x;
+
+-- Fixed point combinator for a unary function
+fix1 :: ((a -> a) -> a -> a) -> (a -> a);
+inline fix1 f =
+   let {
+      rec :: a -> a;
+      rec = \(x :: a) -> #!(f rec x)
+   } in
+      rec;
+
+-- Fixed point combinator for a dyadic function
+fix2 :: ((a -> a -> a) -> a -> a -> a) -> (a -> a -> a);
+inline fix2 f =
+   let {
+      rec :: a -> a -> a;
+      rec = \(x :: a) (y :: a) -> f rec x y
+   } in
+      rec;
+
+-- Logical negation and connectives
+(not) :: a -> Bool;
+{-
+inline (not) x = if x::Bool then False else True;
+inline (&) x y = #!(if x::Bool then y else False);
+inline (|) x y = #!(if x::Bool then True else y);
+-}
+
+inline (not) x = #!(if x then #!False else #!True);
+inline (&) x y = #!(if x then y else #!False);
+inline (|) x y = #!(if x then #!True else y);
+
+-- Pair deconstructors
+fst :: (a, b) -> a;
+inline fst pair = case pair of {(x, _) -> x};
+snd :: (a, b) -> b;
+inline snd pair = case pair of {(_, y) -> y};
+
+-- Triple deconstructors
+fst3 :: (a, b, c) -> a;
+inline fst3 triple = case triple of {(x, _, _) -> x};
+snd3 :: (a, b, c) -> b;
+inline snd3 triple = case triple of {(_, y, _) -> y};
+thd3 :: (a, b, c) -> c;
+inline thd3 triple = case triple of {(x, _, z) -> z};
+
+-- Ptr predicte and deconstructor
+isNull :: Ptr a -> Bool;
+inline isNull ptr = case ptr of {Null -> True; Ptr _ -> False};
+dePtr :: Ptr a -> a;
+inline dePtr ptr = case ptr of { {- Null -> error "dePtr encountered Null"; -} Ptr x -> x};
+
+{-- Pair and triple pointer deconstructors
+Note that @ is a built in pattern match to extract the component of a pointer to a tuple
+as a ptr with offset to a component.
+Translates to
+(REDUCE,$::Ptr(Int,Exp Int)->Ptr Int
+ (PTR-SELECT,Ptr(Int,Exp Int)->Ptr Int,(PAIR,1))
+-}
+
+fstPtr :: Ptr (a, b) -> Ptr a;
+sndPtr :: Ptr (a, b) -> Ptr b;
+inline fstPtr pairPtr = case pairPtr of { @(x, _) -> x }; 
+inline sndPtr pairPtr = case pairPtr of { @(_, y) -> y }; 
+
+fst3Ptr :: Ptr (a, b, c) -> Ptr a;
+snd3Ptr :: Ptr (a, b, c) -> Ptr b;
+thd3Ptr :: Ptr (a, b, c) -> Ptr c;
+inline fst3Ptr triplePtr = case triplePtr of { @(x, _, _) -> x };
+inline snd3Ptr triplePtr = case triplePtr of { @(_, y, _) -> y }; 
+inline thd3Ptr triplePtr = case triplePtr of { @(_, _, z) -> z }; 
+
+-- evalGenPtr, mapGenPtr, assignByPtr, copyClosure and are used for generation of
+-- type method and cell copy method code
+
+evalGenPtr :: Ptr a -> b;
+inline evalGenPtr ptr = ¬::(!(#!(@ptr)));
+
+mapGenPtr :: Ptr a -> Env -> Ptr a;
+inline mapGenPtr ptr dstEnv = 
+   case ptr of {
+      Null ->  Null;
+      Ptr x -> let env :: Env = consEnv  
+               in {
+                  setEnv dstEnv;
+                  let res :: Ptr a = #!(Ptr ¬^(#!(mapToEnv x dstEnv))) in {
+                     setEnv env;
+                     res
+                  }
+               }         
+};
+
+-- Pointer value assignment (maps source to pointer environment)
+(@=) :: a -> Ptr a -> Void;
+inline (@=) x ptr =
+  let dstEnv :: Env = envOf ptr
+  in
+     assignAtPrim (mapToEnv x dstEnv) ptr;
+
+-- Conditionally map a value to a destination environment
+condMapToEnv :: a -> Env -> a;
+inline condMapToEnv x env =
+   if ¬(needsEnv x) or (envOf x) = env then x
+                                       else mapToEnv x env;
+
+mapPtrToEnv :: Ptr a -> Env -> Ptr a;
+inline mapPtrToEnv ptr dstEnv = mapToEnv ptr dstEnv;
+
+-- assignByPtr: Required to copy 'Any' values between environments
+-- Note the value copied is implicitly mapped
+-- between the source and destination environments
+
+assignByPtr :: Ptr a -> Ptr a -> Void;
+inline assignByPtr pSrc pDst = {
+   pDst @= #!(@pSrc);
+};
+
+-- mapClosure is a primitive function intended
+-- only for allocating a copy of a closure and mapping its
+-- free variables between environments
+
+primitive mapClosure :: Env -> a;
+copyClosure :: Env -> a;
+inline copyClosure dstEnv = #!(mapClosure dstEnv);
+
+-- Note that the following primitives apply only to the garbage collection environment (storage allocator)
+primitive markPtr_GC       :: a -> Bool;        -- Mark pointer primitive, returns True if mark flag set
+                                                -- False if already marked
+primitive markExprPtr_GC   :: a -> Bool;        -- Mark expression pointer, returns True if mark flag set
+                                                -- False if already marked
+primitive markExpr_GC      :: Exp a -> Void;    -- Mark expression
+primitive markCell_GC      :: a -> Void;        -- Mark cell
+primitive markString_GC    :: String -> Void;   -- Mark string
+primitive markFreeVars_GC  :: a -> Void;
+
+-- Basic classes
+
+class Eval a, b where {
+   eval :: a -> b
+};
+
+class Cast a, b where {
+   cast :: a -> b
+};
+
+class StrictCast a, b where {
+   strictCast :: a -> b
+};
+
+class StrictCast a, b => IntegralCast Int, b where {
+   fromInt    :: Int -> b
+};
+
+class AtomicSumType a where {
+   atomicSumTypeOf :: a -> Type
+};
+
+class Env a where {
+   needsEnv :: a -> Bool;
+   mapToEnv :: a -> Env -> a;
+   copyToPtr :: a -> Ptr a -> Env -> Void;
+
+   inline needsEnv x = False;
+   inline mapToEnv x env = x;
+   inline copyToPtr src dstPtr env =
+      dstPtr @= src
+};
+
+class Env a => EnvIndependent a where {
+   inline needsEnv x = False;
+   inline mapToEnv x env = x
+};
+
+class Env a => EnvDependent a where {
+   inline needsEnv x = True
+};
+
+-- Garbage collection class
+
+class Mark_GC a where {
+   mark_GC :: a -> Void;
+
+   inline mark_GC x = #!Void;
+};
+
+-- markGenPtr is used to generate mark type method (for Any)
+-- assumes pointer 'markPtr_GC p' true
+markGenPtr :: Ptr a -> Void;
+inline markGenPtr p = mark_GC (#!(@p));
+
+-- Destruction class
+
+class Disposable a where {
+   destroy :: a -> Void;
+
+   inline destroy x = #!Void;
+};
+
+
+class Eq a where {
+   (=)            :: a -> a -> Bool;
+   (¬=)           :: a -> a -> Bool;
+
+   inline (¬=) x y = #!(not #!(x = y));
+};
+
+class Eq a => Ord a where {
+   (<)            :: a -> a -> Bool;
+   (<=)           :: a -> a -> Bool;
+   (>)            :: a -> a -> Bool;
+   (>=)           :: a -> a -> Bool;
+   compare        :: a -> a -> Ordering;
+   max            :: a -> a -> a;
+
+   inline (<) x y =  (compare x y) = LT;
+   inline (<=) x y = case compare x y of {LT -> True; EQ -> True; otherwise -> False};
+   inline (>) x y =  (compare x y) = GT;
+   inline (>=) x y = case compare x y of {GT -> True; EQ -> True; otherwise -> False};
+
+   inline max x y = #!(if x <= y then y else x)
+};
+
+class Bitwise a where {
+   (<<)           :: a -> b -> a;
+   (>>)           :: a -> b -> a;
+   (#&)           :: a -> a -> a;
+   (#^)           :: a -> a -> a;
+   (#|)           :: a -> a -> a;
+   (#¬)           :: a -> a;
+};
+
+class Num a where {
+   zero           :: a;
+   succ           :: a -> a;
+   pred           :: a -> a;
+   (+)            :: a -> a -> a;
+   (-)            :: a -> a -> a;
+   (*)            :: a -> a -> a;
+   (mod)          :: a -> a -> a;
+   plus           :: a -> a;
+   negate         :: a -> a;
+
+   inline plus x = x;
+   inline abs x = #!(if x >= zero then x else -x)
+};
+
+class FractionalNum a where {
+   (/)            :: a -> a -> a;
+};
+
+class Select a, b where {
+   (.)      :: a -> Name -> b
+};
+
+class Seq a where {
+   length      :: a -> Int;
+   tail        :: a -> a;
+   take        :: Int -> a -> a;
+   drop        :: Int -> a -> a;
+   (++)        :: a -> a -> a
+};
+
+class Seq a => ReverseableSeq a where {
+   reverse     :: a -> a;
+};
+
+class IndexableSeq a, b where {
+   getAt     :: a -> Int -> b;
+   putAt     :: a -> Int -> b -> Void;
+   head      :: a -> b
+};
+
+class Textual a where {
+   format :: String -> a -> String;
+   stringify :: a -> String
+};
+
+class Fetch a where {
+   fetch :: Exp a
+};
+
+class Show a where {
+   show :: a -> Void;
+   showWithNewline :: a -> Void;
+   
+   inline show x = show (stringify (::x));
+   inline showWithNewline x = {
+      show x;  -- Instances of 'show' will coerce 'x'
+      show '\n'
+   }      
+};
+
+
+
+instance Eval a, a | !a where {
+   inline eval = id
+};
+
+subordinate instance Cast a, b | !a where {
+   inline cast x = #!(strictCast x)
+};
+
+-- Type: Env
+
+instance Env Env;
+
+instance Mark_GC Env;
+
+-- primitive destroyEnv :: Env -> Void;
+instance Disposable Env where {
+   inline destroy = destroyEnv
+};
+
+primitive eqEnv   :: Env -> Env -> Bool;
+primitive neqEnv  :: Env -> Env -> Bool;
+instance Eq Env where {
+   inline (=) = eqEnv;
+   inline (¬=) = neqEnv
+};
+
+-- Type: Plain
+
+instance Env (Plain b);
+
+-- Note that garbage collection of plain values are special cases
+
+instance Mark_GC (Plain b);
+
+-- 'show' is 'Void' to support the general case
+
+instance Show (Plain b) where {
+   inline show x = #!Void;
+};
+
+-- Type: Void
+
+subordinate instance Show Exp Void where {
+   inline show = reduce;
+   inline showWithNewline = reduce
+};
+
+-- Type: Thunk
+
+instance StrictCast -> b, b where {
+   inline strictCast thunk = #!(#!(fromThunk thunk))
+};
+
+primitive mapThunk :: (-> a) -> Env -> (-> a);
+instance Env (-> b) where {
+   inline needsEnv thunk = True;  
+   inline mapToEnv = mapThunk
+};
+
+instance Mark_GC (-> b) where {
+   inline mark_GC thunk = if markPtr_GC thunk then markCell_GC thunk
+};
+
+instance Show (-> b) where {
+   inline show thunk = show (fromThunk thunk);
+};
+
+-- Type: function
+-- T.B.D. Raise an error if built-in
+
+primitive mapFn :: (a -> b) -> Env -> (a -> b);
+instance Env (b -> c) where {
+   inline needsEnv f = True;  
+   inline mapToEnv = mapFn
+};
+
+instance Mark_GC (b -> c) where {
+   inline mark_GC f = if markPtr_GC f then markCell_GC f
+};
+
+instance Show (b -> c) where {
+   inline show f = show "*** Function ***"
+};
+
+-- Type: Exp a
+
+primitive mapExpr::Exp a -> Env -> Exp a;
+subordinate instance Env Exp b where {
+   inline needsEnv e = True;  
+   inline mapToEnv = mapExpr
+};
+
+instance Mark_GC Exp b where {
+   inline mark_GC e = if markExprPtr_GC e then markExpr_GC e
+};
+
+instance Eval Exp b, b |!b where {
+    inline eval x = #!x
+};
+
+{-
+subordinate instance Eval Exp c, b | !b and (not !c) where {
+    inline eval x = #!(eval (#!x))
+};
+-}
+
+subordinate instance Eval Exp (Exp b), b | !b where {
+    inline eval x = #!(eval (#!x))
+};
+
+
+
+
+instance Cast Exp b, b  where { 
+   inline cast x = #!x
+};
+
+{-
+subordinate instance Cast Exp c, b where {
+   inline cast x = #!(cast (#!x))
+};
+-}
+
+subordinate instance Cast Exp c, b | (not !c) or !c and (instance StrictCast c, b) where {
+   inline cast x = #!(cast (#!x))
+};
+
+
+--mkExpr :: a -> Exp a;
+instance StrictCast a, Exp a | a ¬= Void where {
+   inline strictCast x = mkExpr x
+};
+
+-- Type: Name
+
+primitive mapName :: Name -> Env -> Name;
+instance Env Name where {
+   inline needsEnv x = True;    
+   inline mapToEnv name env = mapName name env
+};
+
+instance Mark_GC Name;
+
+--eqName  :: Name -> Name -> Bool;         -- Built-in
+instance Eq Name where {
+   inline (=) = eqName
+};
+
+instance Ord Name where {
+   inline compare x y = compareString (nameString x) (nameString y)
+};
+
+-- nameString :: Name -> String;
+instance Textual Name where {
+  inline stringify = nameString
+};
+
+instance Show Name where {
+  inline show = showName
+};
+
+-- Type: Type
+
+primitive mapType :: Type -> Env -> Type;
+instance Env Type where {
+   inline needsEnv x = True;   
+   inline mapToEnv t env = mapType t env
+};
+
+instance Mark_GC Type;
+
+--eqType  :: Type -> Type -> Bool;         -- Built-in
+instance Eq Type where {
+   inline (=) = eqType
+};
+
+-- nameString :: Name -> String;
+instance Textual Type where {
+  inline stringify = typeString
+};
+
+instance Show Type where {
+  inline show = showType
+};
+
+-- Type: Tag
+
+instance Env Tag;
+
+instance Mark_GC Tag;
+
+primitive eqTag  :: Tag -> Tag -> Bool;
+instance Eq Tag where {
+   inline (=) = eqTag
+};
+
+-- Type: Byte
+
+instance Env Byte;
+
+instance Mark_GC Byte;
+
+--primitive fromBitsByte :: Bits -> Byte;
+instance StrictCast Bits, Byte where {
+   inline strictCast = fromBitsByte
+};
+
+--primitive fromIntByte :: Int -> Byte;
+instance StrictCast Int, Byte where {
+   inline strictCast = fromIntByte
+};
+
+instance IntegralCast Int, Byte where {
+   inline fromInt = fromIntByte
+};
+
+-- Type: Bits
+
+instance Env Bits;
+
+instance Mark_GC Bits;
+
+--primitive fromByteBits :: Byte -> Bits;
+instance StrictCast Byte, Bits where {
+   inline strictCast = fromByteBits
+};
+
+--primitive fromIntBits :: Int -> Bits;
+instance StrictCast Int, Bits where {
+   inline strictCast = fromIntBits
+};
+
+instance IntegralCast Int, Bits where {
+   inline fromInt = fromIntBits
+};
+
+--primitive lShiftBits  :: Bits -> Int -> Bits;
+--primitive rShiftBits  :: Bits -> Int -> Bits;
+primitive andBits     :: Bits -> Bits -> Bits;
+primitive xorBits     :: Bits -> Bits -> Bits;
+primitive orBits      :: Bits -> Bits -> Bits;
+primitive notBits     :: Bits -> Bits;
+
+instance Bitwise Bits where {
+   inline (<<)	   = lShiftBits;
+   inline (>>)	   = rShiftBits;
+   inline (#&)	   = andBits;
+   inline (#^)	   = xorBits;
+   inline (#|)	   = orBits;
+   inline (#¬)	   = notBits;
+};
+
+--primitive showBits :: Bits -> Void;
+instance Show Bits where {
+  inline show = showBits
+};
+
+-- Type: Int
+
+instance Env Int;
+
+instance Mark_GC Int;
+
+--primitive fromBitsInt :: Bits -> Int;
+subordinate instance StrictCast Bits, Int where {
+   inline strictCast x = #!(fromBitsInt x)
+};
+
+primitive fromStringInt :: String -> Int;
+subordinate instance StrictCast String, Int where {
+   inline strictCast x = #!(fromStringInt x)
+};
+
+--primitive ltEqInt    :: Int -> Int -> Bool;
+--primitive ltInt      :: Int -> Int -> Bool;
+--primitive eqInt      :: Int -> Int -> Bool;
+--primitive nEqInt     :: Int -> Int -> Bool;
+--primitive gtEqInt    :: Int -> Int -> Bool;
+--primitive gtInt      :: Int -> Int -> Bool;
+--primitive compareInt :: Int -> Int -> Ordering;  -- Built-in
+
+instance Eq Int where {
+   inline (=)  = eqInt;
+   inline (¬=) = nEqInt
+};
+
+instance Ord Int where {
+   inline (<)     = ltInt;
+   inline (<=)    = ltEqInt;
+   inline (=)     = eqInt;
+   inline (¬=)    = nEqInt;
+   inline (>=)    = gtEqInt;
+   inline (>)     = gtInt;
+   inline compare = compareInt
+};
+
+--primitive addInt :: Int -> Int -> Int;
+--primitive subInt :: Int -> Int -> Int;
+--primitive mulInt :: Int -> Int -> Int;
+--primitive divInt :: Int -> Int -> Int;
+--primitive modInt :: Int -> Int -> Int;
+--primitive negInt :: Int -> Int;
+
+inline (div) = divInt;
+
+instance Num Int where {
+   inline zero	   = 0;
+   inline succ x  = x + 1;
+   inline pred x  = x - 1;
+   inline (+)	   = addInt;
+   inline (-)	   = subInt;
+   inline (*)	   = mulInt;
+   inline (mod)	= modInt;
+   inline negate	= negInt
+};
+
+-- fetchInt :: Expm Int;
+instance Fetch Int where {
+   inline fetch = #!(fromThunk fetchInt)
+};
+
+--primitive formatInt :: String -> Int -> String;
+instance Textual Int where {
+  inline format = formatInt;
+  inline stringify i = format "%d" i
+};
+
+--primitive showInt :: Int -> Void;
+instance Show Int where {
+  inline show = showInt
+}; 
+
+-- Type: Float
+
+instance Env Float;
+
+instance Mark_GC Float;
+
+--primitive fromIntFloat :: Int -> Float;
+subordinate instance StrictCast Int, Float where {
+   inline strictCast = fromIntFloat
+};
+
+subordinate instance IntegralCast Int, Float where {
+   inline fromInt = fromIntFloat
+};
+
+primitive fromStringFloat :: String -> Float;
+subordinate instance StrictCast String, Float where {
+   inline strictCast = fromStringFloat
+};
+
+primitive eqFloat    :: Float -> Float -> Bool;
+primitive nEqFloat   :: Float -> Float -> Bool;
+instance Eq Float where {
+   inline (=)  = eqFloat;
+   inline (¬=) = nEqFloat
+};
+
+primitive ltEqFloat     :: Float -> Float -> Bool;
+primitive ltFloat       :: Float -> Float -> Bool;
+primitive gtEqFloat     :: Float -> Float -> Bool;
+primitive gtFloat       :: Float -> Float -> Bool;
+--primitive compareFloat  :: Float -> Float -> Ordering;  -- Built-in
+instance Ord Float where {
+   inline (<)     = ltFloat;
+   inline (<=)    = ltEqFloat;
+   inline (=)     = eqFloat;
+   inline (¬=)    = nEqFloat;
+   inline (>=)    = gtEqFloat;
+   inline (>)     = gtFloat;
+   inline compare = compareFloat
+};
+
+--primitive negFloat :: Float -> Float;
+--primitive addFloat :: Float -> Float -> Float;
+--primitive subFloat :: Float -> Float -> Float;
+--primitive mulFloat :: Float -> Float -> Float;
+--primitive divFloat :: Float -> Float -> Float;
+
+primitive fromDoubleFloat :: Double -> Float;
+instance Num Float where {
+   inline zero	   = fromDoubleFloat 0.0;
+   inline succ x	= x + (fromDoubleFloat 1.0);
+   inline pred x	= x - (fromDoubleFloat 1.0);
+   inline negate  = negFloat;
+   inline (+)	   = addFloat;
+   inline (-)	   = subFloat;
+   inline (*)	   = mulFloat;
+};
+
+instance FractionalNum Float where {
+   inline (/)	   = divFloat;
+};
+
+--primitive formatFloat :: String -> Float -> String;
+instance Textual Float where {
+  inline format = formatFloat;
+  inline stringify f = format "%f" f
+};
+
+--primitive showFloat :: Float -> Void;
+instance Show Float where {
+  inline show = showFloat
+};
+
+-- Type: Double
+
+instance Env Double;
+
+instance Mark_GC Double;
+
+--primitive fromIntDouble :: Int -> Double;
+instance StrictCast Int, Double where {
+   inline strictCast = fromIntDouble
+};
+instance IntegralCast Int, Double where {
+   inline fromInt = fromIntDouble
+};
+
+primitive fromFloatDouble :: Float -> Double;
+instance StrictCast Float, Double where {
+   inline strictCast = fromFloatDouble
+};
+
+primitive fromStringDouble :: String -> Double;
+subordinate instance StrictCast String, Double where {
+   inline strictCast = fromStringDouble
+};
+
+--primitive eqDouble   :: Double -> Double -> Bool;
+--primitive nEqDouble  :: Double -> Double -> Bool;
+instance Eq Double where {
+   inline (=)  = eqDouble;
+   inline (¬=) = nEqDouble
+};
+
+--primitive ltEqDouble :: Double -> Double -> Bool;
+--primitive ltDouble   :: Double -> Double -> Bool;
+--primitive gtEqDouble :: Double -> Double -> Bool;
+--primitive gtDouble   :: Double -> Double -> Bool;
+--compareDouble        :: Double -> Double -> Ordering;
+instance Ord Double where {
+   inline (<)     = ltDouble;
+   inline (<=)    = ltEqDouble;
+   inline (=)     = eqDouble;
+   inline (¬=)    = nEqDouble;
+   inline (>=)    = gtEqDouble;
+   inline (>)     = gtDouble;
+   inline compare = compareDouble
+};
+
+--primitive mulDouble :: Double -> Double -> Double;
+--primitive negDouble :: Double -> Double;
+--primitive addDouble :: Double -> Double -> Double;
+--primitive subDouble :: Double -> Double -> Double;
+--primitive mulDouble :: Double -> Double -> Double;
+--primitive mulDouble :: Double -> Double -> Double;
+
+instance Num Double where {
+   inline zero	   = 0.0;
+   inline succ x	= x + 1.0;
+   inline pred x	= x - 1.0;
+   inline negate  = negDouble;
+   inline (+)	   = addDouble;
+   inline (-)	   = subDouble;
+   inline (*)	   = mulDouble;
+};
+
+instance FractionalNum Double where {
+   inline (/)	   = divDouble;
+};
+
+-- fetchDouble :: Exp Double;
+instance Fetch Double where {
+   inline fetch = #!(fromThunk fetchDouble)
+};
+
+--primitive formatDouble :: String -> Double -> String;
+instance Textual Double where {
+  inline format = formatDouble;
+  inline stringify d = format "%f" d
+};
+
+--primitive showDouble :: Double -> Void;
+instance Show Double where {
+  inline show = showDouble
+};
+
+-- Type: Char
+
+instance StrictCast Char, String where {
+   inline strictCast c =
+      #!(let s::String = mutableString 1
+      in {
+         putAt s 0 c;
+         s
+      })
+};
+
+instance Env Char;
+
+instance Mark_GC Char;
+
+--primitive eqChar  :: Char -> Char -> Bool;
+--primitive nEqChar :: Char -> Char -> Bool;
+instance Eq Char where {
+   inline (=)  = eqChar;
+   inline (¬=) = nEqChar
+};
+
+instance Ord Char where {
+   inline (<)     = ltChar;
+   inline (<=)    = ltEqChar;
+   inline (=)     = eqChar;
+   inline (¬=)    = nEqChar;
+   inline (>=)    = gtEqChar;
+   inline (>)     = gtChar;
+   inline compare = compareChar
+};
+
+--primitive formatChar :: String -> Char -> String;
+instance Textual Char where {
+  inline format = formatChar;
+  inline stringify c = format "%c" c 
+};
+
+--primitive showChar :: Char -> Void;
+instance Show Char where {
+  inline show = showChar
+};
+
+-- Type: String
+-- String is dependent on an environment
+-- Its representation is a pointer
+
+--mapString :: String -> Env -> String;      -- Built-in
+instance Env String where {
+   inline needsEnv s = True;    
+   inline mapToEnv s env = mapString s env
+};
+
+instance Mark_GC String where {
+   inline mark_GC = markString_GC
+};
+
+--primitive eqString  :: String -> String -> Bool;
+--primitive nEqString :: String -> String -> Bool;
+instance Eq String where {
+   inline (=)  = eqString;
+   inline (¬=) = nEqString
+};
+
+instance Ord String where {
+   inline (<)     = ltString;
+   inline (<=)    = ltEqString;
+   inline (=)     = eqString;
+   inline (¬=)    = nEqString;
+   inline (>=)    = gtEqString;
+   inline (>)     = gtString;
+   inline compare = compareString
+};
+
+
+instance Seq String where {
+   inline length  = lengthString;
+   inline (++)    = concatString
+};
+
+instance ReverseableSeq String where {
+   inline reverse = reverseString
+};
+
+instance IndexableSeq String, Char where {
+   inline getAt   = getAtString;
+   inline putAt   = putAtString
+};
+
+--primitive formatString :: String -> String -> String;
+instance Textual String where {
+  inline format = formatString;
+  inline stringify = id
+};
+
+--primitive showString :: String -> Void;
+instance Show String where {
+  inline show = showString
+};
+
+-- Atomic sum types
+
+subordinate instance Eq c | !c, (instance AtomicSumType c) where {
+   inline (=) (x :: c) (y :: c) = eqTag (tagOf x) (tagOf y)
+--   inline (¬=) x y = nEqTag (tagOf x) (tagOf y)
+};
+
+-- Type: Bool
+
+instance AtomicSumType Bool;
+
+instance Env Bool;
+
+instance Mark_GC Bool;
+
+instance Show Bool where {
+  inline show = showBool
+};
+
+instance Env Array b;
+
+instance ReverseableSeq Array b;
+
+-- Type: Ptr a
+
+instance Env Ptr b | instance Env b where {
+   inline needsEnv ptr = True;
+   inline mapToEnv ptr dstEnv =
+      case ptr of {
+         Null -> Null;
+         Ptr x -> let env::Env = consEnv  
+                  in {
+                     setEnv dstEnv;
+                     let res :: Ptr b = Ptr ¬^(#!(mapToEnv x dstEnv)) in {
+                        setEnv env;
+                        res
+                     }
+                  }       
+      }
+};
+
+instance Mark_GC Ptr b | instance Mark_GC b where {
+   inline mark_GC ptr  =
+      case ptr of {
+         Null -> #!Void;
+         Ptr x -> if markPtr_GC ptr then
+                     mark_GC x;
+      }
+};
+
+-- Polymorphic native Ptr
+-- eqPtr  :: Ptr a -> Ptr a -> Bool;
+instance Eq Ptr b where {
+   inline (=) = eqPtr;
+};
+
+--primitive eqPlainPtr  :: Plain (Ptr a) -> Plain (Ptr a) -> Bool;
+instance Eq Plain (Ptr b) where {
+   inline (=)  = eqPlainPtr
+};
+
+instance Show Ptr b | b ¬= Array c where {
+   inline show ptr = case ptr of {
+      Null ->  show "Null";
+      ^x ->    {show "^("; show (::x); show ')'}
+   }
+};
+
+
+-- The size of an array referenced by a pointer is unknown,
+-- So default to assuming non-markable items
+
+-- Custom types represented by pointer arrays with markable items
+-- must ensure that the array items are marked explicitly
+
+instance Mark_GC Ptr (Array b);
+
+instance Env Ptr (Array b) where {
+   inline needsEnv ptr = False;
+   inline mapToEnv ptr dstEnv = error "mapToEnv not supported"
+};
+
+instance Show Ptr (Array b) where {
+   inline show ptr = show "^ARRAY"
+};
+
+-- Pair type: (a, b)
+
+instance Env (b, c) where {
+   inline needsEnv pair =
+      case pair of {(c1, c2) ->
+         #!((#!(needsEnv c1)) or
+             (#!(needsEnv c2)))};
+   inline mapToEnv pair env =
+      case pair of { (c1, c2) ->
+        (¬^(#!(mapToEnv c1 env)),
+         ¬^(#!(mapToEnv c2 env)))}
+};
+
+instance Mark_GC (b, c) where {
+   inline mark_GC pair =
+      case pair of { (c1, c2) -> {
+         mark_GC c1;
+         mark_GC c2}
+      }
+};
+
+instance Disposable (b, c) where {
+   inline destroy pair =
+      case pair of { (c1, c2) -> {
+         destroy c1;
+         destroy c2}
+      }
+};
+
+instance Eq (b, c) where {
+   inline (=) x y =
+      case x of { (x1, x2) ->
+         case y of { (y1, y2) ->
+            x1 = y1 and
+            x2 = y2
+        }
+     }
+};
+
+instance Textual (b, c) where {
+  inline stringify pair =
+     case pair of { (c1::b, c2::c) ->
+        '(' ++ (stringify (::c1)) ++
+        ',' ++ (stringify (::c2)) ++ ')'
+     }
+};
+
+instance Show (b, c) where {
+  inline show pair =
+     case pair of { (c1, c2) -> {
+        show '('; show (::c1);
+        show ','; show (::c2); show ')' }
+     }
+};
+
+-- Triple type: (a, b, c)
+
+instance Env (b, c, d) where {
+   inline needsEnv triple =
+      case triple of {(c1, c2, c3) ->
+         #!((#!(needsEnv c1)) or
+             (#!(needsEnv c2)) or
+             (#!(needsEnv c3)))};
+   inline mapToEnv triple env =
+      case triple of { (c1, c2, c3) ->
+        (¬^(#!(mapToEnv c1 env)),
+         ¬^(#!(mapToEnv c2 env)),
+         ¬^(#!(mapToEnv c3 env)))}
+};
+
+instance Mark_GC (b, c, d) where {
+   inline mark_GC triple =
+      case triple of { (c1, c2, c3) -> {
+         mark_GC c1;
+         mark_GC c2;
+         mark_GC c3}
+      }
+};
+{-
+instance Eq (b, c, d) where {
+   inline (=) x y =
+      case x of { (x1, x2, x3) ->
+         case y of { (y1, y2, y3) ->
+            x1 = y1 and
+            x2 = y2 and
+            x3 = y3
+        }
+     }
+};
+-}
+instance Textual (b, c, d) where {
+  inline stringify triple =
+     case triple of { (c1, c2, c3) ->
+        '(' ++ (stringify (::c1)) ++
+        ',' ++ (stringify (::c2)) ++
+        ',' ++ (stringify (::c3)) ++ ')'
+     }
+};
+
+instance Show (b, c, d) where {
+   inline show triple =
+      #!case triple of { (c1, c2, c3) -> #!{
+         #!(show (#!'(')); #!(show (::c1));
+         #!(show (#!',')); #!(show (::c2));
+         #!(show (#!',')); #!(show (::c3));
+         #!(show (#!')')) }
+     }
+};
+
+--Type: UTC
+
+instance Env UTC;
+
+instance Mark_GC UTC;
+
+instance Show UTC where {
+  inline show = showUTC
+};
+
+-- Type: Ordering
+
+instance AtomicSumType Ordering;
+
+instance Env Ordering;
+
+instance Mark_GC Ordering;
+
+instance Show Ordering where {
+  inline show = showOrdering
+};
+
+--Type: When
+
+instance AtomicSumType When;
+
+instance Env When;
+
+instance Mark_GC When;
+
+instance Show When where {
+  inline show = showWhen
+};
+
+-- Type: Maybe a
+
+instance Env Maybe b where {
+   inline needsEnv maybe = True;    
+-- inline needsEnv maybe = typeNeedsEnv (Maybe b); -- T.B.D.
+   inline mapToEnv maybe env =
+      case maybe of {
+         Nothing ->  Nothing;
+         Just x ->   Just (mapToEnv x env)
+      }
+};
+
+instance Mark_GC Maybe b where {
+   inline mark_GC maybe = case maybe of {
+      Just x -> mark_GC x
+   }
+};
+
+instance Show Maybe b where {
+   inline show maybe = case maybe of {
+      Nothing -> show "Nothing";
+      Just x -> show (::x)
+   }
+};
+
+{-
+-- Type: Uneval a
+-- Intended as a wrapper for an unevaluated expression
+
+instance Env Uneval b where {
+   inline needsEnv uneval = True;    
+   inline mapToEnv uneval env =
+      case uneval of {
+         Uneval e ->   Uneval (mapToEnv e env)
+      }
+};
+
+instance Mark_GC Uneval b where {
+   inline mark_GC uneval = case uneval of {
+      Uneval e -> mark_GC e
+   }
+};
+
+instance Show Uneval b where {
+   inline show uneval = case uneval of {
+      Uneval e -> show (::e)
+   }
+};
+-}
+
+end :: (-> Void); 
+inline end = variable (\-> exit 0);
+
+}

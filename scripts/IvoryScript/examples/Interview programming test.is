@@ -1,0 +1,14 @@
+-- Interview programming test (not in place)
+-- Move zeros to end of list
+
+let {
+   pushToEnd :: Exp [Int] -> Exp [Int] -> Exp [Int];
+   pushToEnd l zeros = case ::l of {
+      [] -> zeros;
+      x :+ xs -> if x ¬= 0 then x :+ (pushToEnd xs zeros)
+                           else pushToEnd xs (x :+ zeros)
+   }
+}
+in
+   pushToEnd [1, 9, 8, 4, 0, 0, 2, 7, 0, 6, 0] []
+

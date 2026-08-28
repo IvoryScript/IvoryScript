@@ -1,0 +1,6 @@
+show 'a';       show '\n';
+show 'A';       show '\n';
+show '0';       show '\n';
+show ' ';       show '\n';
+show '\\';      show '\n';
+show '\'';      show '\n';

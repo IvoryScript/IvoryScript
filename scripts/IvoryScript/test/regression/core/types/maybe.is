@@ -1,0 +1,5 @@
+show (isNothing (Nothing :: Maybe Int));                                           show '\n';
+show (isNothing (Just 42));                                         show '\n';
+show (case Nothing of { Nothing -> 0; Just x -> x });              show '\n';
+show (case (Just 42) of { Nothing -> 0; Just x -> x });            show '\n';
+show (case (Just "hello") of { Nothing -> "none"; Just s -> s });  show '\n';

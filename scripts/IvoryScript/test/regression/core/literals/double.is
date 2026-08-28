@@ -1,0 +1,5 @@
+show 0.0;                        show '\n';
+show 3.14159265358979323846;     show '\n';
+show (-2.71828182845904523536);  show '\n';
+show 1.0e10;                     show '\n';
+show 1.5e-3;                     show '\n';

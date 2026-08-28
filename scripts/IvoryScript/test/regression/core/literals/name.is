@@ -1,0 +1,5 @@
+show #alice;                  show '\n';
+show #totalAmount;            show '\n';
+show #x;                      show '\n';
+show (#alice = #alice);       show '\n';
+show (#alice = #bob);         show '\n';

@@ -1,0 +1,109 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory PropertySet
+--
+-- Note: An alternative implementation of the built-in type PropertySet
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module PropertySet where {
+
+type PropertySet = PropertySet [Property];
+
+PropertySet :: [Property] -> BasicVector Property; 
+PropertySet ps = BasicVector ps
+matching {\repr ->
+   let {
+      n :: Int = length repr;
+      propertiesFrom :: Int -> [Property];
+      propertiesFrom i =
+         if i < n then
+            getAtBasicVector_ repr i :+ propertiesFrom (i + 1)
+         else
+            []
+   } in
+      propertiesFrom 0
+};
+
+properties :: PropertySet -> [Property];
+properties ps = case ps of { PropertySet ps -> ps};
+
+-- PropertySet instance of Mark_GC
+
+instance Mark_GC PropertySet where {
+   mark_GC ps = case ps of { ~PropertySet repr -> mark_GC repr }
+};
+
+-- PropertySet instance of Env
+
+instance Env PropertySet where {
+   inline needsEnv ps = True;
+   mapToEnv ps env = case ps of { ~PropertySet repr -> ~PropertySet (mapToEnv repr env) }
+};
+
+-- PropertySet instance of Select
+  
+instance Select PropertySet, Any where {
+   (.) ps key =
+      #!(case ps of { ~PropertySet repr ->
+         let {
+            n :: Int = length repr;
+            searchFrom :: Int -> Int -> (BasicVector Property) -> Name -> Any;
+            searchFrom i n repr key =
+               if i < n then
+                  case getAtBasicVector repr i of {
+                     ~Property (name:val)-> if name = key then val
+                                          else searchFrom (i + 1) n repr key
+                  }
+               else
+                  #!(error "Property not found")
+         } in
+            searchFrom 0 n repr key
+      })
+};
+
+-- PropertySet instance of Show
+
+instance Show PropertySet where {
+   show ps = case ps of { ~PropertySet repr -> show repr }
+};
+
+-- (InputStream Byte), PropertySet instance of StreamExtract 
+
+instance StreamExtract InputStream Byte, PropertySet where {
+   inline extract is = let {
+      repr :: BasicVector Property = (extract is);
+   } in
+      ~PropertySet repr
+};
+
+-- OutputStream Byte, PropertySet instance of StreamInsert 
+
+instance StreamInsert OutputStream Byte, PropertySet where {
+  inline insert os ps = case ps of { ~PropertySet repr -> insert os repr };
+};
+
+}

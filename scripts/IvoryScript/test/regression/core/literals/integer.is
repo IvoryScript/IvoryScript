@@ -1,0 +1,5 @@
+show #0;             show '\n';
+show #42;            show '\n';
+show (-#1);          show '\n';
+show 2147483647;     show '\n';
+show (-#2147483648); show '\n';

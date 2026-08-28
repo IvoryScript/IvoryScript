@@ -1,0 +1,5 @@
+show (let { x = 5; y = x + 3 } in y);                    show '\n';
+show (let { a = 10; b = 20 } in a + b);                   show '\n';
+show (let { s = "hello"; n = lengthString s } in n);      show '\n';
+show (let { x = 2; y = x * x; z = y + 1 } in z);         show '\n';
+let { x = 3; y = 4 } in { show x; show " "; show y; show '\n' };

@@ -1,0 +1,4 @@
+-- Some logical examples
+
+2 = 2;
+[2 = 2, "Apples" = "Pears" or 2 + 2 = 4, True and (True ¬= False)]

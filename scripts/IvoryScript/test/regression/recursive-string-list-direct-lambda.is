@@ -1,0 +1,26 @@
+-- Direct self-recursive local function returning a list.
+--
+-- This is a small reproducer for the direct-lambda path in recursive binding
+-- code generation. The analyser may mark charsFrom as recursive, but a
+-- reserved indirection slot must not be reserved when the direct lambda can be
+-- compiled directly.
+--
+-- Expected output:
+-- abc
+
+let {
+   chars :: String -> [Char];
+   chars s =
+      let {
+         charsFrom :: String -> Int -> Int -> [Char];
+         charsFrom s n i =
+            if i < n then (getAt s i) :+ (charsFrom s n (i + 1))
+                     else []
+      } in
+         charsFrom s (length s) 0;
+
+   result :: [Char] = chars "abc"
+} in {
+   show result;
+   show "\n"
+}

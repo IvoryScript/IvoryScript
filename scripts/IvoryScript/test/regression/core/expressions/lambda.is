@@ -1,0 +1,7 @@
+show ((\x -> x + 1) 5);                            show '\n';
+show ((\x y -> x + y) 3 7);                        show '\n';
+show ((\x -> x * x) 4);                            show '\n';
+show ((\s -> length s) "hello");                   show '\n';
+show ((\x -> x mod 2 = 0) 4);                      show '\n';
+show ((\x -> x mod 2 = 0) 7);                      show '\n';
+let f :: Int -> Int = \x -> x * 2 in show (f 6);   show '\n';

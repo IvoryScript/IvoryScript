@@ -1,0 +1,236 @@
+%glr-parser
+
+%{
+/* YACC grammar for the language Ivory
+ *
+ * This file is best viewed with tabs set to 6
+ *
+ * (c) Copyright (see Date) by Alasdair Scott and Hugh Glaser
+ *
+ * Date: 2000
+ *
+ * The commented line YYDEBUG 1 may be used to trace the parser state machine (stderr).
+ */
+
+#define YYERROR_VERBOSE
+#define YYDEBUG 0
+//#define YYDEBUG 1
+#include <stdio.h>
+
+#define report fprintf
+extern int report(FILE* f, const char* format, ...);
+#define YYFPRINTF report
+
+extern char* yytext;
+extern int yylex(void);
+extern int yylineno;
+extern char string_buf[];
+
+#define yyerror(mess) outStream << "Near line " << yylineno << ' ' << mess << '\n';
+
+#include <stdlib.h>
+#include <string.h>
+#include <malloc.h>
+#ifndef MINIMAL_IOSTREAM
+   #include <sstream>
+   using namespace std;
+#endif 
+#include "ivory/common.h"
+#include "ivory/repr.h"
+#include "ivory/binding.h"
+#include "ivory/bits.h"
+#include "ivory/int.h"
+#include "ivory/double.h"
+#include "ivory/list.h"
+#include "ivory/nameExprMap.h"
+#include "ivory/ref.h"
+#include "ivory/root.h"
+#include "ivory/string.h"
+#include "ivory/tuple.h"
+#include "ivory/trace.h"
+#include "ivory/compiler/parser.h"
+
+declareTypeCon(Any);
+declareTypeCon(Bits);
+declareTypeCon(Int);
+declareTypeCon(Double);
+
+Expr result;
+Name name;
+Expr script;
+
+static NameTable* _nameTable;
+static MSA* _msa;
+static int _errCount;
+
+#define l_result (result.repr())
+#define l_char(c) (fromChar(c).repr())
+#define l_int(i) (fromInt(i,*_msa).repr())
+#define l_bits(b) (fromBits(b,*_msa).repr())
+#define l_double(d) (fromDouble(d,*_msa).repr())
+#define l_string(s) (fromString(s,*_msa).repr())
+#define l_ref(r) (fromRef(r).repr())
+#define l_pair(fst,snd) (Expr(mkPair((fst),(snd),*_msa)).repr())
+#define l_fst(pair) (fst(Expr(pair)).repr())
+#define l_snd(pair) (snd(Expr(pair)).repr())
+#define l_triple(fst3,snd3,thd3) (Expr(mkTriple((fst3),(snd3),(thd3),*_msa)).repr())
+#define l_useName(name) (fromName(useName((name),*_nameTable)).repr())
+#define l_coerce(expr) (coerce((expr),FALSE,FALSE).repr())
+#define l_forceCoerce(expr) (coerce((expr),TRUE,FALSE).repr())
+#define l_noCoerce(expr) (noCoerce((expr)).repr())
+#define l_constrain(expr) (constrain(expr, 0).repr())
+#define l_reduce(expr) (reduce(expr).repr())
+#define l_eval(expr) (eval(expr).repr())
+#define l_ap(f,arg) (Expr(ap((f),(arg),(*_msa))).repr())
+#define l_ap2(f,arg1,arg2) (Expr(ap2((f),(arg1),(arg2),(*_msa))).repr())
+#define l_ap3(f,arg1,arg2,arg3) (Expr(ap3((f),(arg1),(arg2),(arg3),(*_msa))).repr())
+#define l_fun(ap) (fun(Expr(ap)).repr())
+#define l_arg(ap) (arg(Expr(ap)).repr())
+#define l_monAp(f,arg) (l_ap((f),l_coerce(arg)))
+#define l_monApNoCoerce(f,arg) (l_ap((f),(arg)))
+#define l_binAp(f,arg1,arg2) (l_ap(l_reduce(l_ap(f,l_coerce(arg1))),l_coerce(arg2)))
+#define l_genAp(f,arg) (genAp((f),(arg)).repr())
+#define l_mapToConsEnv(x) (mapToConsEnv((x),FALSE).repr())
+#define l_mapToDstEnv(src,dst) (mapToDstEnv((src),(dst),FALSE).repr())
+#define l_dataCon(dataCon) (genDataCon(dataCon).repr())
+#define l_apTuple(comps,card,mapComps) (apTuple((comps),(card),(mapComps)).repr())
+#define l_sequence(list) (sequence(list,TRUE))
+#define l_Nil  (Nil.repr())
+#define l_Ptr (l_useName("Ptr"))
+#define l_Plain (l_useName("Plain"))
+#define l_Any (l_useName("Any"))
+#define l_Bind (l_useName("Bind"))
+#define l_Cons (l_useName("Cons"))
+#define l_cons(x,xs) (Expr(cons((x),(xs),*_msa)).repr())
+#define l_concat(xs,ys) (concat((xs),(ys),*_msa).repr())
+#define l_bind(n,v) (bind((n),(v),*_msa).repr())
+#define l_root (l_useName("root"))
+
+#define pp(off,on) lex_pop(off);lex_push(on)
+
+static void parserError(void);
+
+// Coerce an expression
+// Consumes multiple coercions and is suppressed for explicit reduction
+
+static Expr coerce(Expr x, Bool force, Bool suppress) {
+   return isPair(x) && fst(x) == Expr(NO_COERCE)
+      ? coerce(snd(x), force, TRUE)
+      : (isPair(x) && fst(x) == Expr(COERCE)
+         ? coerce(snd(x), TRUE, suppress)
+         : (!force && (suppress ||
+            isPair(x) && (fst(x) == Expr(REDUCE) ||
+                          fst(x) == Expr(NO_MAP_TO_ENV) ||
+                          fst(x) == Expr(LITERAL)))
+            ? x
+            : Expr(l_pair(COERCE, x))));
+}
+
+
+// Apply NO_COERCE to an expression
+
+static Expr noCoerce(Expr x) {
+   return Expr(l_pair(NO_COERCE, x));
+}
+
+// Applies constraint coercion unless explicit suppression
+
+static Expr constrain(Expr x, UInt reduceCount) {
+   return isPair(x) && fst(x) == Expr(NO_COERCE)
+      ? constrain(snd(x), reduceCount + 1)
+      : (reduceCount < 2
+           ? Expr(l_pair(COERCE, x))
+           : x);
+}
+
+// Reduce an expression
+// Consumes any coercion suppression
+
+static Expr reduce(Expr x) {
+   return isPair(x) && fst(x) == Expr(NO_COERCE)
+      ? reduce(snd(x))
+      : Expr(l_pair(REDUCE, x));
+}
+
+// Evaluate an expression
+
+static Expr eval(Expr x) {
+   return isPair(x) && fst(x) == Expr(NO_COERCE)
+      ? eval(snd(x))
+      : Expr(reduce(l_ap((l_useName("eval")), x)));
+}
+
+// Similarly for mapping to constructor or destination environment
+// Consumes multiple suppressions
+
+static Expr mapToConsEnv(Expr x, Bool suppress) {
+   return isPair(x) && fst(x) == Expr(NO_MAP_TO_ENV)
+      ? mapToConsEnv(snd(x), TRUE)
+      : (suppress
+         ? x
+         : Expr(l_pair(MAP_TO_ENV, x)));
+}
+
+static Expr mapToDstEnv(Expr src, Expr dst, Bool suppress) {
+   return isPair(src) && fst(src) == Expr(NO_MAP_TO_ENV)
+      ? mapToDstEnv(snd(src), dst, TRUE)
+      : (suppress
+         ? src
+         : Expr(l_triple(MAP_TO_ENV, src, dst)));
+}
+
+static Expr defn(Expr patterns, Expr expr) {
+   return patterns == Nil ? l_coerce(expr)
+                          : l_pair(REDUCE, l_triple(LAMBDA, patterns, l_coerce(expr)));
+}
+
+static Expr genAp(Expr f, Expr arg) {
+   return l_ap(isAp(f) ? l_reduce(f)
+                       : l_coerce(f),
+               l_coerce(arg));
+}
+
+static Expr genDataCon(String str) {
+   return l_useName(str);
+}
+
+static Expr apTuple(Expr comps, UInt card, Bool mapAndReduce) {
+   Expr comp = mapAndReduce ? Expr(l_mapToConsEnv(hd(comps))) : hd(comps);
+   if (tl(comps) != Nil) {
+      Expr f = apTuple(tl(comps), card + 1, mapAndReduce);
+      return Expr(l_ap(mapAndReduce ? Expr(l_reduce(f)) : f, comp));
+   } else
+      return Expr(l_ap(TUPLE_MIN + ((card - 1) * TAG_INCR), comp));
+}
+
+static Expr sequence(Expr list, Bool first) {
+   if (list == Nil)
+      return VOID;
+   else {
+      Expr expr = hd(list);
+      if (tl(list) != Nil) {
+         expr = l_ap(l_reduce(l_ap(SEQ, l_coerce(expr))), sequence(tl(list), FALSE));
+         return first 
+            ? expr
+            : Expr(l_reduce(expr));
+      } else
+         return first
+            ? expr
+            : Expr(l_coerce(expr));
+   }
+}
+
+%}
+
+%start script
+
+%union {
+   Char     _char;
+   Int      _int;
+   Bits     _bits;
+   Double	_double;
+   String	_string;
+   ExprRepr _expr;
+}
+
+/* Ivory tokens */

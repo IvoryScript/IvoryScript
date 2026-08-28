@@ -1,0 +1,17 @@
+-- Nilary data-constructor definitions with a variable body must not be shared
+-- as CAFs.  Without the variable marker being raised onto the generated data
+-- constructor binding, the second addBinding mutates the same TransientStore and
+-- fails with "HashTableAdd: key not unique".
+--
+-- Expected output:
+-- ok
+
+let {
+   first :: TransientStore = TransientStore;
+   second :: TransientStore = TransientStore
+} in {
+   addBinding first #sameName (Any 1);
+   addBinding second #sameName (Any 2);
+   show "ok";
+   show "\n"
+}

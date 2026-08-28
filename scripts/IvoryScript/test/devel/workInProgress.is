@@ -1,0 +1,24 @@
+
+let {
+   ts :: TransientStore = TransientStore;
+   os :: OutputStream Byte = fileOutputByteStream "expDecay.isds"
+} in {
+  def ts.decayFrom100th = Any (#!(
+     let {
+        decay :: Double -> Exp [Double];
+        decay x = x :+ decay (x * 0.9)
+    } in 
+       drop 100 (decay 1.0)));
+   insert os ts;
+   streamCloseOutputAction os;
+   destroy ts;
+};
+
+let {
+   is :: InputStream Byte = fileInputByteStream "expDecay.isds";
+   ts :: TransientStore = #!(extract is)
+} in {
+   streamCloseInputAction is;
+   show (take 100 #!(ts.decayFrom100th::Exp (Exp [Double]))); show '\n';
+   destroy ts;
+};

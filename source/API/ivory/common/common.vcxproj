@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5B085C40-AC6A-4484-8396-0396A679BB75}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>14.0.23107.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\..\..\..\build\win32\API\ivory\common\Debug\</OutDir>
+    <IntDir>.\..\..\..\..\build\win32\API\ivory\common\Debug\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\..\..\..\..\build\win32\API\ivory\common\Release\</OutDir>
+    <IntDir>.\..\..\..\..\build\win32\API\ivory\common\Release\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\..\Source\Header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;ENABLE_ASSERT;CHECK_ARGS;RUN_TIME_TYPE_CHECKS=1;GLOBAL_VM=1;FRAME_DESCRIPTORS=1;GARBAGE_COLLECTION=1;SERIALISATION=1;INTERPRETER=1;NO_INTERP_EXCEPTIONS;WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\..\..\..\build\win32\API\ivory\common\Debug/common.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\..\..\..\build\win32\API\ivory\common\Debug/</AssemblerListingLocation>
+      <ObjectFileName>.\..\..\..\..\build\win32\API\ivory\common\Debug/</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\..\..\..\build\win32\API\ivory\common\Debug/</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\..\..\..\build\win32\API\ivory\common\Debug\common.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\..\..\..\build\win32\API\ivory\common\Debug/common.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>..\..\..\..\Source\Header;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;RUN_TIME_TYPE_CHECKS=0;GLOBAL_VM=1;FRAME_DESCRIPTORS=1;GARBAGE_COLLECTION=1;SERIALISATION=1;INTERPRETER=1;NO_INTERP_EXCEPTIONS;WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\..\..\..\build\win32\API\ivory\common\Release/common.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\..\..\..\build\win32\API\ivory\common\Release/</AssemblerListingLocation>
+      <ObjectFileName>.\..\..\..\..\build\win32\API\ivory\common\Release/</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\..\..\..\build\win32\API\ivory\common\Release/</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <OmitFramePointers>true</OmitFramePointers>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\..\..\..\build\win32\API\ivory\common\Release\common.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\..\..\..\build\win32\API\ivory\common\Release/common.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\nameTable\hash.cpp" />
+    <ClCompile Include="any\any.cpp" />
+    <ClCompile Include="any\evalAny.cpp" />
+    <ClCompile Include="any\extractBinAnyPtr.cpp" />
+    <ClCompile Include="any\insertBinAnyPtr.cpp" />
+    <ClCompile Include="Any\mapAnyPtr.cpp" />
+    <ClCompile Include="any\markAny_GC.cpp" />
+    <ClCompile Include="any\showAny.cpp" />
+    <ClCompile Include="any\insertTxtAny.cpp" />
+    <ClCompile Include="binding\binding.cpp" />
+    <ClCompile Include="bits\bits.cpp" />
+    <ClCompile Include="bits\bitwiseBits.cpp" />
+    <ClCompile Include="bits\insertTxtBits.cpp" />
+    <ClCompile Include="bits\showBits.cpp" />
+    <ClCompile Include="bits\strictCastBits.cpp" />
+    <ClCompile Include="bool\bool.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="bool\eqBool.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="bool\showBool.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="bool\insertTxtBool.cpp" />
+    <ClCompile Include="byteString\bytesToString.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="byteString\byteString.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="byteString\mapByteString.cpp" />
+    <ClCompile Include="byteString\showByteString.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="byteString\insertTxtByteString.cpp" />
+    <ClCompile Include="byte\byte.cpp" />
+    <ClCompile Include="byte\strictCastByte.cpp" />
+    <ClCompile Include="char\char.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="char\eqChar.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="char\extractBinChar.cpp" />
+    <ClCompile Include="char\formatChar.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="char\insertBinChar.cpp" />
+    <ClCompile Include="char\ordChar.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="char\showChar.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="char\insertTxtChar.cpp" />
+    <ClCompile Include="class\bitsClass.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="class\eqClass.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="class\fractionalClass.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="class\integralClass.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="class\numClass.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="class\objectClass.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="class\ordClass.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="class\showClass.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="dir\closeDir.cpp" />
+    <ClCompile Include="dir\dir.cpp" />
+    <ClCompile Include="dir\dirEntryName.cpp" />
+    <ClCompile Include="dir\makeDir.cpp" />
+    <ClCompile Include="dir\nextDirEntry.cpp" />
+    <ClCompile Include="dir\openDir.cpp" />
+    <ClCompile Include="dir\removeDir.cpp" />
+    <ClCompile Include="double\acos.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\asin.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\atan.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\atan2.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\cos.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\cosh.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\degrees.cpp" />
+    <ClCompile Include="double\double.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\eqDouble.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\exp.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\extractBinDouble.cpp" />
+    <ClCompile Include="double\fetchDouble.cpp" />
+    <ClCompile Include="double\formatDouble.cpp" />
+    <ClCompile Include="double\fractionalDouble.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\insertBinDouble.cpp" />
+    <ClCompile Include="double\log.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\log10.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\numDouble.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\ordDouble.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\pow.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\radians.cpp" />
+    <ClCompile Include="double\showDouble.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\insertTxtDouble.cpp" />
+    <ClCompile Include="double\sin.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\sinh.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\sqrt.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\strictCastDouble.cpp" />
+    <ClCompile Include="double\tan.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="double\tanh.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="env\env.cpp" />
+    <ClCompile Include="env\extractBinEnv.cpp" />
+    <ClCompile Include="env\insertBinEnv.cpp" />
+    <ClCompile Include="extant\extant.cpp" />
+    <ClCompile Include="fileIO\closeFile.cpp" />
+    <ClCompile Include="fileIO\deleteFile.cpp" />
+    <ClCompile Include="fileIO\fileHandle.cpp" />
+    <ClCompile Include="fileIO\ioMode.cpp" />
+    <ClCompile Include="fileIO\openFile.cpp" />
+    <ClCompile Include="fileIO\readFileByte.cpp" />
+    <ClCompile Include="fileIO\writeFileByte.cpp" />
+    <ClCompile Include="float\eqFloat.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="float\extractBinFloat.cpp" />
+    <ClCompile Include="float\float.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="float\formatFloat.cpp" />
+    <ClCompile Include="float\fractionalFloat.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="float\insertBinFloat.cpp" />
+    <ClCompile Include="float\numFloat.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="float\ordFloat.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="float\showFloat.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="float\insertTxtFloat.cpp" />
+    <ClCompile Include="float\strictCastFloat.cpp" />
+    <ClCompile Include="interpreter\assignSegmentImports.cpp" />
+    <ClCompile Include="interpreter\copyICellInfo.cpp" />
+    <ClCompile Include="interpreter\copySegment.cpp" />
+    <ClCompile Include="interpreter\eqSegment.cpp" />
+    <ClCompile Include="interpreter\exec.cpp" />
+    <ClCompile Include="interpreter\exec_GC.cpp" />
+    <ClCompile Include="interpreter\ExportMap.cpp" />
+    <ClCompile Include="interpreter\extractBinICell.cpp" />
+    <ClCompile Include="interpreter\handleScriptInput.cpp" />
+    <ClCompile Include="interpreter\hashSegment.cpp" />
+    <ClCompile Include="interpreter\ICellInfoMap.cpp" />
+    <ClCompile Include="interpreter\initSegment.cpp" />
+    <ClCompile Include="interpreter\insertBinICell.cpp" />
+    <ClCompile Include="interpreter\loadSegment.cpp" />
+    <ClCompile Include="interpreter\mapType.cpp" />
+    <ClCompile Include="interpreter\opCodeToString.cpp" />
+    <ClCompile Include="interpreter\segmentEnv.cpp" />
+    <ClCompile Include="interpreter\segmentHash.cpp" />
+    <ClCompile Include="interpreter\segmentInfo.cpp" />
+    <ClCompile Include="interpreter\segmentLength.cpp" />
+    <ClCompile Include="interpreter\segmentRackSlotPtr.cpp" />
+    <ClCompile Include="interpreter\segmentTable.cpp" />
+    <ClCompile Include="interpreter\storeSegment.cpp" />
+    <ClCompile Include="int\eqInt.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="int\extractBinInt.cpp" />
+    <ClCompile Include="int\fetchInt.cpp" />
+    <ClCompile Include="int\formatInt.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="int\insertBinInt.cpp" />
+    <ClCompile Include="int\int.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="int\integralInt.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="int\ordInt.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="int\random.cpp" />
+    <ClCompile Include="int\showInt.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="int\insertTxtInt.cpp" />
+    <ClCompile Include="int\srand.cpp" />
+    <ClCompile Include="int\strictCastInt.cpp" />
+    <ClCompile Include="linkage\linkage.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="list\list.cpp" />
+    <ClCompile Include="machine\closure.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\enter.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\enterReturn.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\error.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\eval.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\exit.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\extractBinCell.cpp" />
+    <ClCompile Include="machine\extractBinExpr.cpp" />
+    <ClCompile Include="machine\frameDescr.cpp" />
+    <ClCompile Include="machine\indirection.cpp" />
+    <ClCompile Include="machine\insertBinCell.cpp" />
+    <ClCompile Include="machine\insertBinExpr.cpp" />
+    <ClCompile Include="machine\machine.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\mapClosure.cpp" />
+    <ClCompile Include="machine\memAlloc_GC.cpp" />
+    <ClCompile Include="machine\postConstructorInit.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\postEval.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\preEval.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\printExpr.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\start.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\stop.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\trace.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="machine\trampoline.cpp" />
+    <ClCompile Include="maybe\maybe.cpp" />
+    <ClCompile Include="module\builtInModule.cpp" />
+    <ClCompile Include="module\byteCodeModule.cpp" />
+    <ClCompile Include="module\importNameAddr.cpp" />
+    <ClCompile Include="module\module.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="module\typeConSig.cpp" />
+    <ClCompile Include="name\copyName.cpp" />
+    <ClCompile Include="name\eqName.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="name\extractBinName.cpp" />
+    <ClCompile Include="name\hashName.cpp" />
+    <ClCompile Include="name\iNameTable.cpp" />
+    <ClCompile Include="name\insertBinName.cpp" />
+    <ClCompile Include="name\mapName.cpp" />
+    <ClCompile Include="name\name.cpp" />
+    <ClCompile Include="name\nameString.cpp" />
+    <ClCompile Include="name\printName.cpp" />
+    <ClCompile Include="name\showName.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="name\insertTxtName.cpp" />
+    <ClCompile Include="ord\ordering.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="ord\showOrdering.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="ord\insertTxtOrdering.cpp" />
+    <ClCompile Include="plain\plain.cpp" />
+    <ClCompile Include="ptr\eqPtr.cpp" />
+    <ClCompile Include="ptr\ptr.cpp" />
+    <ClCompile Include="ref\insertTxtRef.cpp" />
+    <ClCompile Include="ref\ref.cpp" />
+    <ClCompile Include="repr\ap.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\arity.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\builtIn.cpp" />
+    <ClCompile Include="repr\builtInDataCon.cpp" />
+    <ClCompile Include="repr\builtInFn.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\cellInfo.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\class.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\dataCon.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\expr.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\formOf.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\headForm.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\label.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\nameExprBinding.cpp" />
+    <ClCompile Include="repr\nameExprMap.cpp" />
+    <ClCompile Include="repr\object.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\printRepr.cpp" />
+    <ClCompile Include="repr\repr.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="repr\sizeOfRepr.cpp" />
+    <ClCompile Include="repr\typeCon.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="streams\extractArchive.cpp" />
+    <ClCompile Include="streams\insertArchive.cpp" />
+    <ClCompile Include="streams\serialContext.cpp" />
+    <ClCompile Include="streams\extractBinTag.cpp" />
+    <ClCompile Include="streams\extractBinSerialString.cpp" />
+    <ClCompile Include="streams\insertBinSerialString.cpp" />
+    <ClCompile Include="streams\insertBinTag.cpp" />
+    <ClCompile Include="streams\insertTxtTag.cpp" />
+    <ClCompile Include="streams\putChar.cpp" />
+    <ClCompile Include="streams\streams.cpp" />
+    <ClCompile Include="string\eqString.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="string\extractBinString.cpp" />
+    <ClCompile Include="string\formatString.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="string\hashString.cpp" />
+    <ClCompile Include="string\insertBinString.cpp" />
+    <ClCompile Include="string\isSubstring.cpp" />
+    <ClCompile Include="string\lowercaseString.cpp" />
+    <ClCompile Include="string\mapString.cpp" />
+    <ClCompile Include="string\markString_GC.cpp" />
+    <ClCompile Include="string\ordString.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="string\seqString.cpp" />
+    <ClCompile Include="string\showString.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="string\insertTxtString.cpp" />
+    <ClCompile Include="string\string.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="string\substring.cpp" />
+    <ClCompile Include="string\uppercaseString.cpp" />
+    <ClCompile Include="tag\tag.cpp" />
+    <ClCompile Include="thread\delay.cpp" />
+    <ClCompile Include="tuple\showPair.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="tuple\insertTxtPair.cpp" />
+    <ClCompile Include="tuple\tuple.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="type\argType.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="type\array.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="type\canonicalTypeSig.cpp" />
+    <ClCompile Include="type\destroyTypeSig.cpp" />
+    <ClCompile Include="type\eqType.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="type\extractBinType.cpp" />
+    <ClCompile Include="type\hashTypeSig.cpp" />
+    <ClCompile Include="type\insertBinType.cpp" />
+    <ClCompile Include="type\isSumType.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="type\loadTypeSig.cpp" />
+    <ClCompile Include="type\printType.cpp" />
+    <ClCompile Include="type\resultType.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="type\setArgFlags.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="type\showType.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="type\insertTxtType.cpp" />
+    <ClCompile Include="type\storeTypeSig.cpp" />
+    <ClCompile Include="type\type.cpp" />
+    <ClCompile Include="type\typeTable.cpp" />
+    <ClCompile Include="type\unpackTypeSig.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="UTC\eqUTC.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="UTC\formatUTC.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="UTC\ordUTC.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="UTC\showUTC.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="UTC\insertTxtUTC.cpp" />
+    <ClCompile Include="UTC\time.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="UTC\timeDiff.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="UTC\UTC.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="void\void.cpp">
+      <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
+    </ClCompile>
+    <ClCompile Include="when\showWhen.cpp" />
+    <ClCompile Include="when\insertTxtWhen.cpp" />
+    <ClCompile Include="when\when.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\header\ivory\builtInFn.h" />
+    <ClInclude Include="..\..\..\header\ivory\common.h" />
+    <ClInclude Include="..\..\..\header\ivory\dataCon.h" />
+    <ClInclude Include="..\..\..\header\ivory\machine.h" />
+    <ClInclude Include="..\..\..\header\ivory\repr.h" />
+    <ClInclude Include="..\..\..\header\ivory\type.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

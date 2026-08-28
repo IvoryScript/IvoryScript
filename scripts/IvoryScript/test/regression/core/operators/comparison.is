@@ -1,0 +1,7 @@
+show (1 = 1);  show '\n';
+show (1 = 2);  show '\n';
+show (3 ¬= 4); show '\n';
+show (5 > 3);  show '\n';   
+show (3 >= 3); show '\n';    
+show (2 < 5);  show '\n';
+show (4 <= 3); show '\n';

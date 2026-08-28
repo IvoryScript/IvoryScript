@@ -1,0 +1,125 @@
+compile bytes modules/Prelude.is
+
+
+compile bytes modules/Tuple_4_10.is
+
+
+compile bytes modules/IO.is
+
+
+compile bytes modules/Serialisable.is
+
+
+compile bytes modules/Streams.is
+
+
+compile bytes modules/Streams_Tuple_4_10.is
+
+
+compile bytes modules/Any.is
+
+
+compile bytes modules/Binding.is 
+
+
+compile bytes modules/List.is 
+
+
+compile bytes modules/ListFunction.is
+
+
+compile bytes modules/StringList.is
+
+
+compile bytes modules/Tree.is 
+
+
+compile bytes modules/Array.is
+
+
+compile bytes modules/BasicVector.is
+
+
+compile bytes modules/Vector.is
+
+
+compile bytes modules/HashTable.is 
+
+
+compile bytes modules/HashTableFunction.is 
+
+
+compile bytes modules/NameAnyMap.is
+
+
+compile bytes modules/NameAnyMapFunction.is
+
+
+--compile bytes modules/Dictionary.is
+
+
+compile bytes modules/Property.is
+
+
+compile bytes modules/PropertySet.is
+
+
+--compile bytes modules/AnyProperty.is
+
+
+--compile bytes modules/AnyPropertySet.is
+
+
+compile bytes modules/MathConst.is
+
+
+compile bytes modules/Arith.is
+
+
+compile bytes modules/NumAggregate.is
+
+
+compile bytes modules/IntSeq.is
+
+
+--compile bytes modules/Dir.is verbose
+
+
+compile bytes modules/SimpleRoot.is
+
+
+compile bytes modules/TransientDataStore.is
+
+
+compile bytes modules/TransientStore.is
+
+
+--compile bytes modules/AnyInstances.is
+
+
+compile bytes modules/AnyNum.is
+
+
+compile bytes modules/AnySeq.is
+
+
+compile bytes modules/AnyBindingSet.is
+
+
+
+--check-output bytes test/regression/types/ordering.is verbose
+--compile code test/regression/collections/propertyset.is
+--check-output bytes test/regression/collections/propertyset.is verbose list tran="pass=2 printAST" analyse="trace" target="trace code gen iCode bytes" run="trace"
+--check-output bytes test/regression/core/functions/recursion.is verbose verbose run="trace"
+--check-output bytes test/regression/core/functions/gc_memoisation.is verbose run="memoryLimit=134217728"
+c--heck-output bytes test/regression/core/functions/gc_memoisation.is
+--check-output bytes test/regression/core/functions/higher_order.is verbose
+--check-output bytes test/regression/core/functions/recursion.is verbose 
+--check-output bytes test/regression/core/expressions/case.is verbose
+--check-output bytes test/regression/core/expressions/pattern_matching.is
+--check-output bytes test/regression/core/literals verbose
+--check-output bytes test/regression/core/operators/arithmetic.is verbose
+--check-output bytes test/regression/sequences/string_list.is verbose
+--check-output bytes test/regression/sequences/map_filter.is verbose
+check-output bytes test/regression verbose
+--check-output bytes test/regression

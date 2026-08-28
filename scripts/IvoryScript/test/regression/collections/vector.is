@@ -1,0 +1,18 @@
+let v :: Vector Int = Vector [1, 2, 3, 4, 5] 8 in {
+    show (lengthVector v);        show '\n';
+    show (getAtVector v 0);       show '\n';
+    show (getAtVector v 2);       show '\n';
+    show (getAtVector v 4);       show '\n';
+    show (findVectorIndex v 3);   show '\n';
+    show (findVectorIndex v 9);   show '\n';
+    show v;                       show '\n'
+};
+
+let v :: Vector String = Vector ["alpha", "beta", "gamma"] 8 in {
+    show (lengthVector v);         show '\n';
+    show (getAtVector v 0);        show '\n';
+    show (findVectorIndex v "beta"); show '\n';
+    putAtVector v 1 "delta";
+    show (getAtVector v 1);        show '\n';
+    show v;                        show '\n'
+};

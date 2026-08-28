@@ -1,0 +1,17 @@
+-- An advanced example of concrete pattern matching 
+-- and illustrating the efficiency of name/type value storage
+
+let x :: Binding Name Any = the_answer_to_everything:42
+in
+   case x of {~Bind repr ->
+     let {
+        type_ :: Type = typeOf x;
+        reprType_ :: Type = typeOf repr;
+        size :: Int  = sizeOf type_
+      } in {
+        show "A value of type ("; show type_;
+        show ") such as "; show x;
+        show " is represented by the type "; show reprType_;
+        show " and uses "; show size; show " bytes of storage for this machine architecture.\n"
+      }
+   }

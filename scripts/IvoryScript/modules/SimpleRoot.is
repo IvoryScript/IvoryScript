@@ -1,0 +1,78 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory basic root store.
+--
+-- Date: 25 October 2003
+--
+-- Description:
+--    A basic form of root transient store comprising a hash table
+--    in a separate environment.
+--
+-------------------------------------------------------------------------------
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module SimpleRoot where {
+
+root :: NameAnyMap;
+root =   
+   let env::Env = consEnv  
+   in {
+      setEnv (mkEnv 1024 47 16 47 16 47 47 16);
+      let rootStore = #!(NameAnyMap 47) in {
+         setEnv env;
+         rootStore
+      }
+   };
+
+{-
+#define ROOT_BLK_LEN          1024
+#define ROOT_NAME_SLOTS       43
+#define ROOT_NAMES_PER_SEG    32
+#define ROOT_TYPE_SLOTS       43
+#define ROOT_TYPES_PER_SEG    32
+#define ROOT_OBJS_PER_SEG     256
+#define ROOT_CLUSTER_BLK_LEN  256
+root :: TransientObjectStore;
+root = TransientObjectStore 1024 43 32 43 32 256 256
+
+root :: ADS;
+let { rootTDS = TransientDataStore 512 47 47 16 512 47;
+      env::Env = consEnv}
+in {
+   setEnvTDS rootTDS; 
+   let ads::ADS = ADS [registerSlots:  47
+                       ruleList:	      !RefList[]] rootTDS]
+   in {
+      setEnv env;
+      ads;
+   }
+}
+
+
+
+-}
+}
+

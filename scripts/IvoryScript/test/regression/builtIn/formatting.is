@@ -1,0 +1,9 @@
+show (formatInt "%d" 0);             show '\n';
+show (formatInt "%d" 42);            show '\n';
+show (formatInt "%d" (-7));          show '\n';
+show (formatInt "%x" 255);           show '\n';
+show (formatDouble "%.2f" 3.14159); show '\n';
+show (formatDouble "%.1f" 0.0);     show '\n';
+show (formatDouble "%e" 1.0);       show '\n';
+show (formatString "%s" "hello");   show '\n';
+show (formatString "%10s" "hello"); show '\n';

@@ -1,0 +1,83 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory string/list functions
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module StringList where {
+
+-- String as a list of character(s)
+
+chars :: String -> [Char];
+chars s =
+   let {
+      charsFrom :: String -> Int -> Int -> [Char];
+      charsFrom s n i =
+         if i < n then (getAt s i) :+ (charsFrom s n (i + 1))
+                  else []
+   } in
+      charsFrom s (length s) 0;
+
+-- Quoted list of character(s)
+
+quotedChars :: [Char] -> [String];
+quotedChars chars = mapf (\c -> "\'" ++ (::c) ++ "\'") chars;
+
+--quotedChars chars = mapf (\c -> (::c)) chars;
+
+-- List of character(s) as String
+
+string :: [Char] -> String;
+string chars =
+   let {
+      s :: String = mutableString (length chars);
+      put :: [Char] -> String -> Int -> String;
+      put chars s i =
+         case chars of {
+            [] -> s;
+            c :+ xs -> { putAt s i c; put #!xs s (i + 1) }
+         }
+   } in
+      put chars s 0;
+   
+   
+{- Now built-in
+instance ReverseableSeq String where {
+   reverse s = string ((reverse (chars s)))
+};
+-}
+
+
+instance StrictCast [Char], String where {
+   inline strictCast chars = string (let s :: [Char] = chars in s)
+};
+
+
+subordinate instance StrictCast String, Exp [Char] where {
+   inline strictCast s = chars s
+}
+  
+}

@@ -1,0 +1,213 @@
+-------------------------------------------------------------------------------
+--
+-- (c) Copyright (see Date) by Alasdair Scott
+ --
+-- Ivory basic vector (dynamic length array) type
+--
+-- Date:    7 February 2003
+--
+-- Notes:
+--
+-- Implements a single array of n items where n = length elems
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module BasicVector where {
+
+type BasicVector a = BasicVector [a];
+
+BasicVector :: [a] -> (Int, Ptr (Array a));
+
+inline BasicVector elems = 
+   let {
+      n::Int = length elems;
+      ptrArr :: Ptr (Array a) = allocPtrArray n;
+      assignFrom :: Ptr (Array a) -> Int -> [a] -> Int -> (Int, Ptr (Array a));
+      assignFrom ptrArr n elems i =
+         case elems of {
+            Nil ->       (n, ¬^ptrArr);
+            Cons x xs -> {
+               putAtPtrArray ptrArr i (mapToEnv x consEnv);
+               assignFrom ptrArr n (::xs) (i + 1)
+            }         
+        }
+   } in
+      assignFrom ptrArr n elems 0;
+
+-- Length
+
+lengthBasicVector :: BasicVector a -> Int;
+inline lengthBasicVector vec = case vec of { ~BasicVector repr -> fst repr };
+
+-- Value at a given index
+
+getAtBasicVector :: BasicVector a -> Int -> a;
+inline getAtBasicVector vec i =
+   case vec of { ~BasicVector repr ->
+      if i >= 0 and i < (fst repr) then
+         getAtPtrArray (snd repr) i
+      else
+         error "Vector index out of bounds" };
+
+-- Value at a given index (range check suppressed for trusted types)
+
+getAtBasicVector_ :: BasicVector a -> Int -> a;
+inline getAtBasicVector_ vec i =
+   case vec of { ~BasicVector repr -> getAtPtrArray (snd repr) i };
+
+-- BasicVector instance of Env
+
+instance Env BasicVector b where {
+   inline needsEnv ps = True;
+   inline mapToEnv v env =
+      #!(case v of {~BasicVector repr ->
+         let
+            n :: Int = fst repr
+         in
+            if n > 0 then
+               let
+                  currEnv = consEnv
+               in {
+                  setEnv env;
+                  let  res :: BasicVector b = 
+                     let {
+                        srcPtrArr :: Ptr (Array b) = snd repr;
+                        dstPtrArr :: Ptr (Array b) = allocPtrArray n;
+                        copyFrom :: Ptr (Array b) -> Ptr (Array b) -> Env -> Int -> Int -> Void;
+                        copyFrom srcPtrArr dstPtrArr env n i =
+                           if (i < n) then {
+                              putAtPtrArray dstPtrArr i (mapToEnv (getAtPtrArray srcPtrArr i) env);
+                              copyFrom srcPtrArr dstPtrArr env n (i + 1)
+                           }
+                     } in {
+                        copyFrom srcPtrArr dstPtrArr env n 0;
+                        ~BasicVector (n, ¬^dstPtrArr)
+                     }
+                  in {
+                     setEnv currEnv;
+                     res
+                  }
+               }
+            else
+               ~BasicVector (n, ¬^(Null::Ptr (Array b)))
+      })
+};
+
+-- BasicVector instance of Mark_GC
+
+instance Mark_GC BasicVector b where {
+   inline mark_GC v = case v of { ~BasicVector repr ->
+      let {
+         n :: Int = fst repr;
+         ptrArr :: Ptr (Array b) = snd repr;
+         markFrom :: Ptr (Array b) -> Int -> Int -> Void;
+         markFrom ptrArr n i =
+            if i < n then { 
+               mark_GC #!(getAtPtrArray ptrArr i);
+               markFrom ptrArr n (i + 1)
+            }
+      } in
+         if markPtr_GC ptrArr then
+            markFrom ptrArr n 0       
+   }
+};
+
+-- BasicVector instance of Seq
+
+instance Seq BasicVector b where {
+   inline length = lengthBasicVector;
+};
+
+-- BasicVector instance of IndexableSeq
+
+instance IndexableSeq BasicVector b, b where { 
+   inline getAt =  getAtBasicVector;
+};
+
+-- BasicVector instance of Show
+
+instance Show BasicVector b where {
+   inline show v = case v of {~BasicVector repr ->
+      let { n :: Int = fst repr;
+            ptrArr :: Ptr (Array b) = snd repr;
+            showElem :: Ptr (Array b) -> Int -> Void;
+            showElem ptrArr i = show (getAtPtrArray ptrArr i);
+            showFrom :: (Ptr (Array b)) -> Int -> Int -> Void;
+            showFrom ptrArr n i =
+               if i < n then
+                  { show ',';
+                    showElem ptrArr i;
+                    showFrom ptrArr n (i + 1) }
+               else
+                  show ']'}
+      in {
+         if n = 0 then show "[]"
+                  else  { show '[';
+                          showElem ptrArr 0;
+                          showFrom ptrArr n 1 }
+      }
+   }
+};
+
+-- InputStream Byte, BasicVector instance of StreamExtract 
+
+instance StreamExtract InputStream Byte, BasicVector c where {
+   inline extract is =
+      let {
+         n :: Int = #!(extract is);
+         ptrArr :: Ptr (Array c) = allocPtrArray n;
+         extractFrom :: InputStream Byte -> (Ptr (Array c)) -> Int -> Int -> Void;
+         extractFrom is ptrArr n i =
+            if i < n then {
+               putAtPtrArray ptrArr i (extract is);
+               extractFrom is ptrArr n (i + 1)
+            }
+   } in {
+      extractFrom is ptrArr n 0;
+      ~BasicVector #!(n, ¬^ptrArr)
+   } 
+};
+
+-- OutputStream Byte, BasicVector instance of StreamInsert 
+
+instance StreamInsert OutputStream Byte, BasicVector c where {
+   inline insert os v = case v of {~BasicVector reprPair ->
+      let {
+         n :: Int = fst reprPair;
+         ptrArr :: Ptr (Array c) = snd reprPair;
+         insertFrom :: OutputStream Byte -> (Ptr (Array c)) -> Int -> Int -> Void;
+         insertFrom os ptrArr n i =
+            if i < n then { 
+               insert os #!(getAtPtrArray ptrArr i);
+               insertFrom os ptrArr n (i + 1)
+            }
+      } in {
+
+         insert os n;
+         insertFrom os ptrArr n 0   
+      }
+   }
+};
+
+}

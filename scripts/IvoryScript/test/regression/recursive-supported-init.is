@@ -1,0 +1,39 @@
+-- Sequential recursive initialisation positive codegen test.
+--
+-- This covers recursive reservations whose binding type is supported by the
+-- code generator: expression-shaped and function-shaped bindings.
+--
+-- Expected output:
+-- 1155
+
+let {
+   -- Forward value reference with an expression-shaped type: allowed.
+   x :: Exp Int = #!y + 2;
+   y :: Exp Int = 40;
+
+   force :: (Int -> Int) -> Int -> Int;
+   force f n = f n;
+
+   -- Self reference inside a function-shaped binding: allowed.
+   sumDown :: Int -> Int;
+   sumDown = force (\(n :: Int) ->
+      if n = 0 then 0
+               else n + sumDown (n - 1));
+
+   -- Forward closure reference between function-shaped bindings: allowed.
+   evenScore :: Int -> Int;
+   oddScore  :: Int -> Int;
+
+   evenScore = force (\(n :: Int) ->
+      if n = 0 then 1
+               else oddScore (n - 1));
+
+   oddScore = force (\(n :: Int) ->
+      if n = 0 then 0
+               else evenScore (n - 1));
+
+   result :: Int = sumDown 10 + (100 * evenScore 10) + (1000 * oddScore 7)
+} in {
+   show result;
+   show "\n"
+}

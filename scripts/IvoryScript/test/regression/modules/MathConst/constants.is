@@ -1,0 +1,8 @@
+show pi;      show '\n';
+show e;       show '\n';
+show phi;     show '\n';
+show sqrt2;   show '\n';
+show ln2;     show '\n';
+show ln10;    show '\n';
+show (pi * 1.0 * 1.0);             show '\n';
+show (phi * phi - phi - 1.0);      show '\n';

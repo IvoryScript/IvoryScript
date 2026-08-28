@@ -1,0 +1,268 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory Tree data type and related functions.
+--
+-- Note
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module Tree where {
+
+type Tree a = Empty | Leaf a | Branch (Exp (Tree a)) (Exp (Tree a));
+
+Leaf :: a -> Ptr a;
+inline Leaf x = Ptr x
+matching { inline \repr -> case repr of {Ptr x -> x } };
+
+{-
+Leaf :: a -> a;
+inline Leaf x = x
+matching { inline id };
+-}
+
+Branch :: Exp (Tree a) -> Exp (Tree a) -> Ptr (Exp (Tree a), Exp (Tree a));
+inline Branch l r = Ptr ¬^(#!(l, r))
+matching {inline \repr -> case repr of {Ptr (l, _) -> l};
+          inline \repr -> case repr of {Ptr (_, r) -> r}};
+
+unmappedBranch :: Exp (Tree a) -> Exp (Tree a) -> Tree a;
+inline unmappedBranch l r = ~Branch #!(Ptr ¬^(#!(¬^l, ¬^r)));
+
+-- Search for a value in an ordered leaf-only tree
+searchTree :: (a -> a -> Ordering) -> a -> Exp (Tree a) -> Bool;
+inline searchTree fn target tree =
+   let (find :: (a -> a -> Ordering) -> a -> Tree a -> Bool) fn target tree =
+      case tree of {
+         Empty -> False;         
+         Leaf x -> fn x target = EQ;
+         -- Since branches are pure, we check the rightmost leaf of the left subtree
+         -- to decide the path, or recurse if the structure is a simple grouping.
+         Branch l r -> find fn target (::l) or find fn target (::r)
+      }
+   in
+      find fn target (::tree);
+
+
+-- Map a function over all leaves in the tree
+mapTree :: (a -> b) -> Exp (Tree a) -> Exp (Tree b);
+inline mapTree f tree =
+   let (go :: (a -> b) -> Tree a -> Tree b) f t =
+      case t of {
+         Empty ->        Empty;
+         Leaf x ->       Leaf (f x);
+         Branch l r ->   Branch (go f (::l)) (go f (::r))
+      }
+   in
+      go f (::tree);
+
+foldTree :: (a -> b -> b) -> b -> Exp (Tree a) -> b;
+inline foldTree f z tree =
+   let (go :: (a -> b -> b) -> b -> Tree a -> b) f z t =
+      case t of {
+         Empty ->        z;
+         Leaf x ->       f x z;
+         Branch l r ->   
+            -- Fold the right subtree first, then pass the result to the left
+            -- to maintain an in-order or structural fold.
+            let res_r = #!(go f z (#!r)) in
+            go f res_r (#!l)
+      }
+   in
+      go f z (#!tree);
+
+-- Tree depth: Not polymorphic for Exp (Tree a) and Tree a because of
+-- independence on 'a'
+
+depthTree :: Exp (Tree a) -> Int;
+inline depthTree tree =
+   let (depthTree_ :: (Tree a) -> Int) tree = case tree of {
+	   Empty ->       -1;
+	   Leaf (_::a) -> 0;
+	   Branch l r ->  1 + (max (depthTree_ (::l)) (depthTree_ (::r))); }
+   in depthTree_ (::tree);
+
+-- Maximum value
+
+maxTree :: Exp (Tree a) -> Maybe a;
+inline maxTree tree =
+   let maxTree_ (tree :: Tree a) = case tree of {
+	   Empty ->    Nothing;
+	   Leaf x ->   Just x;
+	   Branch l r ->
+         let { lMax :: Maybe a = maxTree_ (::l);
+               rMax :: Maybe a = maxTree_ (::r)}
+         in
+            case lMax of {
+               Nothing ->  rMax;
+               Just x ->   case rMax of {
+                  Nothing ->  lMax;
+                  Just y ->   Just (max x y);
+               }
+            }
+   } in
+      maxTree_ (::tree);
+
+sumTree :: Exp (Tree a) -> a;
+inline sumTree tree =
+   let sumTree_ (tree :: (Tree a)) =
+      case tree of {
+	      Empty ->       zero;
+	      Leaf x ->      x;
+	      Branch l r ->  (sumTree_ (::l)) + (sumTree_ (::r));
+   } in
+      sumTree_ (::tree);
+
+flattenTree :: Exp (Tree a) -> [a];
+inline flattenTree tree =
+   let (flattenTree_ :: Tree a -> Exp [a] -> [a]) tree acc =
+      case tree of {
+         Empty ->       [];
+         Leaf x ->      x :+ acc;
+         Branch l r ->  flattenTree_ (::l) (flattenTree_ (::r) acc)
+      }
+   in
+      flattenTree_ (::tree) [];           
+
+-- Build a balanced ordered binary tree from a sorted list
+treeFromList :: [a] -> Exp (Tree a);
+inline treeFromList list =
+   let (build :: Int -> [a] -> (Exp (Tree a), [a])) n xs =
+      if n = 0 then 
+         (Empty, xs)
+      else if n = 1 then 
+         case xs of { y :+ ys -> (Leaf y, ::ys) }
+      else
+         let mid = n div 2 in
+         case build mid xs of { (left, rest1) ->
+            case build (n - mid) rest1 of { (right, rest2) ->
+               (Branch (::left) (::right), rest2)
+            }
+         }
+   in
+      case build (length list) list of { (tree, _) -> tree };
+
+rebalanceTree :: Exp (Tree a) -> Exp (Tree a);
+inline rebalanceTree tree = treeFromList #!(flattenTree tree);
+
+
+instance Env (Tree b) where {
+   inline needsEnv tree = True;  
+   inline mapToEnv tree env  =  
+      case tree of {
+         Empty ->       Empty;
+         Leaf x ->      Leaf (mapToEnv x env);
+         Branch l r ->  Branch (mapToEnv l env) (mapToEnv r env)
+      }
+};
+
+
+instance Mark_GC (Tree b) where {
+   inline mark_GC tree =
+      let (mark_GC_ :: (Tree b) -> Void) tree  =
+         case tree of {
+            Empty ->
+               #!Void;
+            ~Leaf (repr :: Ptr b) ->
+               if markPtr_GC repr then
+                  let x :: b = @repr
+                  in
+                     mark_GC x;
+            ~Branch (repr :: Ptr (Exp (Tree b), Exp (Tree b))) ->
+               if markPtr_GC repr then {
+                 let lhs ::  Exp (Tree b)  = fst(@repr)
+                 in
+                    mark_GC_ (#!lhs);
+                let rhs ::  Exp (Tree b)  = snd(@repr)
+                 in
+                    mark_GC_ (#!rhs);
+               }
+         }
+      in
+         mark_GC_ tree;
+};
+
+instance StreamExtract InputStream Byte, Tree c where {
+   inline extract is = case ((#!(extract is)) :: Int) of {
+      0 ->  Empty;
+      1 ->  let x = (#!(extract is))::c in Leaf ¬^x;
+      2 ->  let {
+               l =  (#!(extract is))::Exp (Tree c);
+               r =  (#!(extract is))::Exp (Tree c)
+            } in
+               unmappedBranch l r
+   }
+};
+
+instance StreamInsert OutputStream Byte, Tree c where {
+inline
+   insert os tree = case tree of {
+      Empty ->       insert os #0;
+      Leaf x ->      { insert os #1; insert os x };
+      Branch l r ->  { insert os #2; insert os l; insert os r }
+   }
+};
+
+instance Textual Tree b where {
+   inline stringify tree =
+      let {
+         stringify_ :: Tree b -> String -> String;
+         stringify_ tree padding =
+            case tree of {
+               Empty -> '\n';
+               Leaf x -> ':' ++ (stringify (::x)) ++ '\n';
+               Branch l r ->
+                 "+-" ++
+                  (stringify_ !l padding ++ "| ") ++
+                  padding ++
+                  "\\-" ++
+                  (stringify_ !r padding ++ "  ")  
+            }
+      } in
+         stringify_ tree "";
+};
+
+
+instance Show Exp (Tree b) where {
+   inline show tree =
+      let {
+         show_ :: Exp (Tree b) -> String -> Void;
+         show_ tree padding =
+            case !tree of {
+               Empty -> show '\n';
+               Leaf x -> { show ':'; show (::x); show '\n'};
+               Branch l r -> {
+                  show "+-";
+                  show_ l (padding ++ "| ");
+                  show padding;
+                  show "\\-";
+                  show_ r (padding ++ "  ");
+               }
+            }
+      } in
+         show_ tree "";
+};
+
+}

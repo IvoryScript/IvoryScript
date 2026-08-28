@@ -1,0 +1,72 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- IvoryScript: HashTableFunction.is
+--
+-- Date: 22 February 2026
+--
+-- Description:
+--
+--    Ivory hash table operations involving functions
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module HashTableFunction where {
+
+foldHashTable :: (keyType -> valType -> a -> a) ->
+                 a ->
+                 HashTable keyType valType -> a;
+
+inline foldHashTable f z ht =
+   #!(case ht of { ~HashTable repr ->
+      let {
+         nSlots :: Int = fst repr;
+         slots  :: Ptr (Array (Ptr (HashTableEntry keyType valType))) = snd repr;
+
+         foldChain :: (keyType -> valType -> a -> a) ->
+                      a ->
+                      Ptr (HashTableEntry keyType valType) -> a;   
+         foldChain f z nodePtr =
+            case nodePtr of {
+               Ptr (HashTableEntry next k v) ->
+                  foldChain f (f k v z) next;
+               Null -> z
+            };
+
+         foldFrom :: (keyType -> valType -> a -> a) ->
+                     a ->
+                     Ptr (Array (Ptr (HashTableEntry keyType valType))) ->
+                     Int ->
+                     Int -> a;
+         foldFrom f z slots nSlots i =
+            if i < nSlots then                
+               #!(foldFrom f (#!(foldChain f z (getAtPtrArray slots i))) slots nSlots (i + 1) )
+            else
+               z
+      } in
+         #!(foldFrom f z slots nSlots 0)
+   })
+
+}

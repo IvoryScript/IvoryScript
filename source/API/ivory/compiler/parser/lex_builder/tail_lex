@@ -1,0 +1,212 @@
+include		BEGIN(incl);
+
+{UC_NAME}		{	yylval._string = (char*)_msa->alloc(yyleng + 1);
+				strcpy(yylval._string, yytext);
+				lex_push(L_UC_NAME);
+				return L_UC_NAME;
+			}
+
+{LC_NAME}		{	yylval._string = (char*)_msa->alloc(yyleng + 1);
+				strcpy(yylval._string, yytext);
+				lex_push(L_LC_NAME);
+				return L_LC_NAME;
+			}
+
+{DIGIT}+		{	yylval._int=atoi(yytext);
+				lex_push(L_INTEGER);
+				return L_INTEGER;
+			}
+
+0[xX]{HEXDIG}+	{	yytext[1]='x';
+				yylval._bits=(Bits)strtoul(yytext,NULL,16);
+				lex_push(L_HEX);
+				return L_HEX;
+			}
+
+{DIGIT}+(("."{DIGIT}+)?)(([eE](["+"-]?){DIGIT}+)?) {
+				yylval._double=atof(yytext);
+				lex_push(L_FIXED); 
+				return L_FIXED;
+			}
+
+\'[^']		{	input();
+				yylval._char = yytext[1];
+				lex_push(L_CHAR);
+				return L_CHAR;
+                  }
+
+\'\\{ESCAPE}\'    {     yylval._char = escapeSeq(yytext[2]);
+				lex_push(L_CHAR);
+				return L_CHAR;
+                  }
+
+\'\\{DIGIT}+\'	{	yylval._char =(char)(atoi(&yytext[2]));
+				lex_push(L_CHAR);
+				return L_CHAR;
+			}
+
+\'\\[xX]{HEXDIG}+\' {
+				yylval._char =(char)strtol(&yytext[3],NULL,16);
+				lex_push(L_CHAR);
+				return L_CHAR;
+			}
+
+\"	                  string_buf_ptr = string_buf; BEGIN(str);
+
+<str>\"	      {
+		            BEGIN(INITIAL);
+		            *string_buf_ptr = '\0';
+				lex_push(L_STRING);
+				return L_STRING;
+		      }
+
+<str>\n	      {
+		            error("unterminated string constant");
+		      }
+
+<str>\\[0-7]{1,3} {
+                        int result;
+                        (void) sscanf( yytext + 1, "%o", &result );
+                        if ( result > 0xff )
+	                        error("string constant out of range");
+
+                        *string_buf_ptr++ = result;
+                  }
+
+<str>\\[0-9]+     {
+                        error("invalid character escape");
+		      }
+
+<str>\\[xX]{HEXDIG}+ {
+                        long result = strtol(yytext + 2, NULL, 16);
+                        if (result > 0xff)
+                                error("string hex escape out of range");
+                        *string_buf_ptr++ = (char)result;
+                  }
+
+<str>\\{ESCAPE}   {
+                        *string_buf_ptr++ = escapeSeq(yytext[1]);
+                  }
+<str>\\(.|\n)           *string_buf_ptr++ = yytext[1];
+
+<str>[^\\\n\"]+   {
+		            char *yptr = yytext;
+		            while ( *yptr )
+			            *string_buf_ptr++ = *yptr++;
+		      }
+
+<cmd>"{"		{ BEGIN(INITIAL); lex_push(L_CMD_LCURLYB); return L_CMD_LCURLYB; }
+<cmd>[ \t\n]+	{}
+<cmd>.		{ yyless(0); BEGIN(INITIAL); }
+
+[ \t\r\n]		;
+
+"--".*		;
+
+"{-"			{	char c;
+				unsigned int level = 1;
+				for ( ; ; ) {
+
+               while ((c = input()) != '-' &&
+                        c != '{' &&
+                        c != 0)
+                     ;
+
+               if (c == 0) {
+                     error1("Mismatched nested comment at line %d", yylineno);
+                     break;
+               }
+
+               if (c == '-') {
+                     while ((c = input()) == '-') ;
+                     if (c == 0) {
+                        error1("Mismatched nested comment at line %d", yylineno);
+                        break;
+                     }
+                     if (c == '}' && --level == 0)
+                        break;
+               } else if (c == '{') {
+                     while ((c = input()) == '{') ;
+                     if (c == 0) {
+                        error1("Mismatched nested comment at line %d", yylineno);
+                        break;
+                     }
+                     if (c == '-')
+                        level++;
+					}
+				}
+			}
+
+<incl>[ \t]*	;
+
+<incl>\"[^"]*	{	if (input() == '"')
+					yytext[yyleng]='\0';
+				else {
+					error("expected \"");
+					return 0;
+				}
+
+				if (stackPtr >= MAX_INCLUDE_DEPTH) {
+					error("Too many nested includes");
+					yyterminate();
+				} else {
+					char* fileName = (char*)_msa->alloc(yyleng - 1 + 1);
+					strcpy(fileName, yytext + 1);
+
+					if ((yyin = fopen(fileName, "r")) == NULL) {
+						error1("Can\'t open include file %s", fileName);
+						yyterminate();
+					}
+					fileNameStack[stackPtr] = fileName;
+                              fileStack[stackPtr] = yyin;
+					bufferStack[stackPtr] = YY_CURRENT_BUFFER;
+					lineNoStack[stackPtr] = yylineno;
+					yylineno = 1;
+					yy_switch_to_buffer(
+						yy_create_buffer(yyin, YY_BUF_SIZE));
+                              stackPtr++;
+					BEGIN(INITIAL);
+				}
+			}
+			
+<<EOF>>		{
+				if (--stackPtr < 0) {
+					stackPtr = 0;
+					yyterminate();
+				} else {
+					yylineno = lineNoStack[stackPtr];
+                              fclose(fileStack[stackPtr]);
+					yy_delete_buffer(YY_CURRENT_BUFFER);
+					yy_switch_to_buffer(bufferStack[stackPtr]);
+				}
+			}
+	
+{ANY}		{}		
+%%
+
+extern FILE* openFile(void);
+extern void clearParserState(void);
+int initParser(const char* filename) {
+   if ((yyin = fopen(filename, "r")) == NULL) {
+      error1("Can\'t open file \"%s\"\n", filename);
+      return 0;
+   }
+   clearParserState();
+   return 1;
+}
+
+void termParser() {
+   if (yyin != NULL) {
+      fclose(yyin);
+      yyin = NULL;
+   }
+}
+
+void* createParserBuffer(const char* s) {
+   return (void*)yy_scan_string(s);
+}
+
+void destroyParserBuffer(void* buf) {
+   yy_flush_buffer((YY_BUFFER_STATE)buf);
+   yy_delete_buffer((YY_BUFFER_STATE)buf);
+}

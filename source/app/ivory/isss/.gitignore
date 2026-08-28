@@ -1,0 +1,39 @@
+# ==========================================
+# IvorySystem/isss .gitignore
+# ==========================================
+
+# 1. Compiled Binaries (Linux executables)
+isss
+iss
+
+# ==========================================
+# IvorySystem/isss .gitignore
+# ==========================================
+
+# 1. Compiled Binaries (Linux executables)
+isss
+iss
+
+# 2. Build Objects and Dependencies
+*.o
+*.d
+*.so
+*.a
+*.la
+*.lo
+
+# 3. Directory-based ignores
+# Specifically targets your Makefile's structure
+obj/
+bin/
+build/
+../../../../build/
+
+# 4. OS and Editor specifics (General hygiene)
+.DS_Store
+*~
+*.swp
+*.bak
+*.log
+.vscode/
+.idea/

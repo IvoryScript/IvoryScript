@@ -1,0 +1,7 @@
+show (3 + 4);     show '\n';
+show (10 - 3);    show '\n';
+show (6 * 7);     show '\n';
+show (10 / 4);    show '\n';   
+show (10 div 4);  show '\n';    
+show (10 mod 3);  show '\n';
+show (2 ^ 8);     show '\n';

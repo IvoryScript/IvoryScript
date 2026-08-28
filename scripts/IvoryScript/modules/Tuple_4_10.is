@@ -1,0 +1,573 @@
+-------------------------------------------------------------------------------
+--
+-- (c) see Date by Alasdair Scott
+--
+-- Ivory n-tuple instances for n between 4 and 10
+--
+-- Date: 25 October 2003
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module Tuple_4_10 where {
+
+-- Type: (a, b, c, d)
+
+instance Env (b, c, d, e) where {
+   inline needsEnv quadruple =
+      case quadruple of {(c1, c2, c3, c4) ->
+         #!((#!(needsEnv c1)) or
+             (#!(needsEnv c2)) or
+             (#!(needsEnv c3)) or
+             (#!(needsEnv c4)))};
+   inline mapToEnv quadruple env =
+      case quadruple of { (c1, c2, c3, c4) ->
+         #!(¬^(#!(mapToEnv c1 env)),
+             ¬^(#!(mapToEnv c2 env)),
+             ¬^(#!(mapToEnv c3 env)),
+             ¬^(#!(mapToEnv c4 env)))}
+};
+
+instance Mark_GC (b, c, d, e) where {
+   inline mark_GC quadruple =
+      case quadruple of { (c1, c2, c3, c4) -> {
+         mark_GC c1;
+         mark_GC c2;
+         mark_GC c3;
+         mark_GC c4} }
+};
+
+instance Eq (b, c, d, e) where {
+   inline (=) x y =
+      case x of { (x1, x2, x3, x4) ->
+         case y of { (y1, y2, y3, y4) ->
+            x1 = y1 and
+            x2 = y2 and
+            x3 = y3 and
+            x4 = y4
+        }
+     }
+};
+
+instance Textual (b, c, d, e) where {
+  inline stringify quadruple =
+     case quadruple of { (c1, c2, c3, c4) ->
+        '(' ++ (stringify (::c1)) ++
+        ',' ++ (stringify (::c2)) ++
+        ',' ++ (stringify (::c3)) ++
+        ',' ++ (stringify (::c4)) ++ ')'
+     }
+};
+
+instance Show (b, c, d, e) where {
+   inline show quadruple =
+      #!case quadruple of { (c1, c2, c3, c4) -> #!{
+         #!(show (#!'(')); #!(show (::c1));
+         #!(show (#!',')); #!(show (::c2));
+         #!(show (#!',')); #!(show (::c3));
+         #!(show (#!',')); #!(show (::c4));
+         #!(show (#!')')) }
+     }
+};
+
+-- Type: (a, b, c, d, e)
+
+instance Env (b, c, d, e, f) where {
+   inline needsEnv quintuple =
+      case quintuple of {(c1, c2, c3, c4, c5) ->
+         #!((#!(needsEnv c1)) or
+             (#!(needsEnv c2)) or
+             (#!(needsEnv c3)) or
+             (#!(needsEnv c4)) or
+             (#!(needsEnv c5)))};
+   inline mapToEnv quintuple env =
+      case quintuple of { (c1, c2, c3, c4, c5) ->
+         #!(¬^(#!(mapToEnv c1 env)),
+             ¬^(#!(mapToEnv c2 env)),
+             ¬^(#!(mapToEnv c3 env)),
+             ¬^(#!(mapToEnv c4 env)),
+             ¬^(#!(mapToEnv c5 env)))}
+};
+
+instance Mark_GC (b, c, d, e, f) where {
+   inline mark_GC quintuple =
+      case quintuple of { (c1, c2, c3, c4, c5) -> {
+          mark_GC c1;
+          mark_GC c2;
+          mark_GC c3;
+          mark_GC c4;
+          mark_GC c5} }
+};
+
+instance Eq (b, c, d, e, f) where {
+   inline (=) x y =
+      case x of { (x1, x2, x3, x4, x5) ->
+         case y of { (y1, y2, y3, y4, y5) ->
+            x1 = y1 and
+            x2 = y2 and
+            x3 = y3 and
+            x4 = y4 and
+            x5 = y5
+        }
+     }
+};
+
+instance Textual (b, c, d, e, f) where {
+  inline stringify quintuple =
+     case quintuple of { (c1, c2, c3, c4, c5) ->
+        '(' ++ (stringify (::c1)) ++
+        ',' ++ (stringify (::c2)) ++
+        ',' ++ (stringify (::c3)) ++
+        ',' ++ (stringify (::c4)) ++
+        ',' ++ (stringify (::c5)) ++ ')'
+     }
+};
+
+instance Show (b, c, d, e, f) where {
+   inline show quintuple =
+      #!case quintuple of { (c1, c2, c3, c4, c5) -> #!{
+         #!(show (#!'(')); #!(show (::c1));
+         #!(show (#!',')); #!(show (::c2));
+         #!(show (#!',')); #!(show (::c3));
+         #!(show (#!',')); #!(show (::c4));
+         #!(show (#!',')); #!(show (::c5));
+         #!(show (#!')')) }
+     }
+};
+
+-- Type: (a, b, c, d, e, f)
+
+instance Env (b, c, d, e, f, g) where {
+   inline needsEnv sextuple =
+      case sextuple of {(c1, c2, c3, c4, c5, c6) ->
+         #!((#!(needsEnv c1)) or
+             (#!(needsEnv c2)) or
+             (#!(needsEnv c3)) or
+             (#!(needsEnv c4)) or
+             (#!(needsEnv c5)) or
+             (#!(needsEnv c6)))};
+   inline mapToEnv sextuple env =
+      case sextuple of { (c1, c2, c3, c4, c5, c6) ->
+         #!(¬^(#!(mapToEnv c1 env)),
+             ¬^(#!(mapToEnv c2 env)),
+             ¬^(#!(mapToEnv c3 env)),
+             ¬^(#!(mapToEnv c4 env)),
+             ¬^(#!(mapToEnv c5 env)),
+             ¬^(#!(mapToEnv c6 env)))}
+};
+
+instance Mark_GC (b, c, d, e, f, g) where {
+   inline mark_GC sextuple =
+      case sextuple of { (c1, c2, c3, c4, c5, c6) -> {
+          mark_GC c1;
+          mark_GC c2;
+          mark_GC c3;
+          mark_GC c4;
+          mark_GC c5;
+          mark_GC c6} }
+};
+
+instance Eq (b, c, d, e, f, g) where {
+   inline (=) x y =
+      case x of { (x1, x2, x3, x4, x5, x6) ->
+         case y of { (y1, y2, y3, y4, y5, y6) ->
+            x1 = y1 and
+            x2 = y2 and
+            x3 = y3 and
+            x4 = y4 and
+            x5 = y5 and
+            x6 = y6
+        }
+     }
+};
+
+instance Textual (b, c, d, e, f, g) where {
+  inline stringify sextuple =
+     case sextuple of { (c1, c2, c3, c4, c5, c6) ->
+        '(' ++ (stringify (::c1)) ++
+        ',' ++ (stringify (::c2)) ++
+        ',' ++ (stringify (::c3)) ++
+        ',' ++ (stringify (::c4)) ++
+        ',' ++ (stringify (::c5)) ++
+        ',' ++ (stringify (::c6)) ++ ')'
+     }
+};
+
+instance Show (b, c, d, e, f, g) where {
+   inline show sextuple =
+      #!case sextuple of { (c1, c2, c3, c4, c5, c6) -> #!{
+         #!(show (#!'(')); #!(show (::c1));
+         #!(show (#!',')); #!(show (::c2));
+         #!(show (#!',')); #!(show (::c3));
+         #!(show (#!',')); #!(show (::c4));
+         #!(show (#!',')); #!(show (::c5));
+         #!(show (#!',')); #!(show (::c6));
+         #!(show (#!')')) }
+     }
+};
+
+-- Type: (a, b, c, d, e, f, g)
+
+instance Env (b, c, d, e, f, g, h) where {
+   inline needsEnv septuple =
+      case septuple of {(c1, c2, c3, c4, c5, c6, c7) ->
+         #!((#!(needsEnv c1)) or
+             (#!(needsEnv c2)) or
+             (#!(needsEnv c3)) or
+             (#!(needsEnv c4)) or
+             (#!(needsEnv c5)) or
+             (#!(needsEnv c6)) or
+             (#!(needsEnv c7)))};
+   inline mapToEnv septuple env =
+      case septuple of { (c1, c2, c3, c4, c5, c6, c7) ->
+         #!(¬^(#!(mapToEnv c1 env)),
+             ¬^(#!(mapToEnv c2 env)),
+             ¬^(#!(mapToEnv c3 env)),
+             ¬^(#!(mapToEnv c4 env)),
+             ¬^(#!(mapToEnv c5 env)),
+             ¬^(#!(mapToEnv c6 env)),
+             ¬^(#!(mapToEnv c7 env)))}
+};
+
+instance Mark_GC (b, c, d, e, f, g, h) where {
+   inline mark_GC septuple =
+      case septuple of { (c1, c2, c3, c4, c5, c6, c7) -> { 
+          mark_GC c1;
+          mark_GC c2;
+          mark_GC c3;
+          mark_GC c4;
+          mark_GC c5;
+          mark_GC c6;
+          mark_GC c7} }
+};
+
+instance Eq (b, c, d, e, f, g, h) where {
+   inline (=) x y =
+      case x of { (x1, x2, x3, x4, x5, x6, x7) ->
+         case y of { (y1, y2, y3, y4, y5, y6, y7) ->
+            x1 = y1 and
+            x2 = y2 and
+            x3 = y3 and
+            x4 = y4 and
+            x5 = y5 and
+            x6 = y6 and
+            x7 = y7
+        }
+     }
+};
+
+instance Textual (b, c, d, e, f, g, h) where {
+  inline stringify sextuple =
+     case sextuple of { (c1, c2, c3, c4, c5, c6, c7) ->
+        '(' ++ (stringify (::c1)) ++
+        ',' ++ (stringify (::c2)) ++
+        ',' ++ (stringify (::c3)) ++
+        ',' ++ (stringify (::c4)) ++
+        ',' ++ (stringify (::c5)) ++
+        ',' ++ (stringify (::c6)) ++
+        ',' ++ (stringify (::c7)) ++ ')'
+     }
+};
+
+instance Show (b, c, d, e, f, g, h) where {
+   inline show septuple =
+      #!case septuple of { (c1, c2, c3, c4, c5, c6, c7) -> #!{
+         #!(show (#!'(')); #!(show (::c1));
+         #!(show (#!',')); #!(show (::c2));
+         #!(show (#!',')); #!(show (::c3));
+         #!(show (#!',')); #!(show (::c4));
+         #!(show (#!',')); #!(show (::c5));
+         #!(show (#!',')); #!(show (::c6));
+         #!(show (#!',')); #!(show (::c7));
+         #!(show (#!')')) }
+     }
+};
+
+-- Type: (a, b, c, d, e, f, g, h)
+
+instance Env (b, c, d, e, f, g, h, i) where {
+   inline needsEnv octuple =
+      case octuple of {(c1, c2, c3, c4, c5, c6, c7, c8) ->
+         #!((#!(needsEnv c1)) or
+             (#!(needsEnv c2)) or
+             (#!(needsEnv c3)) or
+             (#!(needsEnv c4)) or
+             (#!(needsEnv c5)) or
+             (#!(needsEnv c6)) or
+             (#!(needsEnv c7)) or
+             (#!(needsEnv c8)))};
+   inline mapToEnv octuple env =
+      case octuple of { (c1, c2, c3, c4, c5, c6, c7, c8) ->
+         #!(¬^(#!(mapToEnv c1 env)),
+             ¬^(#!(mapToEnv c2 env)),
+             ¬^(#!(mapToEnv c3 env)),
+             ¬^(#!(mapToEnv c4 env)),
+             ¬^(#!(mapToEnv c5 env)),
+             ¬^(#!(mapToEnv c6 env)),
+             ¬^(#!(mapToEnv c7 env)),
+             ¬^(#!(mapToEnv c8 env)))}
+};
+
+instance Mark_GC (b, c, d, e, f, g, h, i) where {
+   inline mark_GC octuple =
+      case octuple of { (c1, c2, c3, c4, c5, c6, c7, c8) -> {
+          mark_GC c1;
+          mark_GC c2;
+          mark_GC c3;
+          mark_GC c4;
+          mark_GC c5;
+          mark_GC c6;
+          mark_GC c7;
+          mark_GC c8} }
+};
+
+instance Eq (b, c, d, e, f, g, h, i) where {
+   inline (=) x y =
+      case x of { (x1, x2, x3, x4, x5, x6, x7, x8) ->
+         case y of { (y1, y2, y3, y4, y5, y6, y7, y8) ->
+            x1 = y1 and
+            x2 = y2 and
+            x3 = y3 and
+            x4 = y4 and
+            x5 = y5 and
+            x6 = y6 and
+            x7 = y7 and
+            x8 = y8
+        }
+     }
+};
+
+instance Textual (b, c, d, e, f, g, h, i) where {
+  inline stringify octuple =
+     case octuple of { (c1, c2, c3, c4, c5, c6, c7, c8) ->
+        '(' ++ (stringify (::c1)) ++
+        ',' ++ (stringify (::c2)) ++
+        ',' ++ (stringify (::c3)) ++
+        ',' ++ (stringify (::c4)) ++
+        ',' ++ (stringify (::c5)) ++
+        ',' ++ (stringify (::c6)) ++
+        ',' ++ (stringify (::c7)) ++
+        ',' ++ (stringify (::c8)) ++ ')'
+     }
+};
+
+instance Show (b, c, d, e, f, g, h, i) where {
+  inline show octuple =
+      #!case octuple of { (c1, c2, c3, c4, c5, c6, c7, c8) -> #!{
+         #!(show (#!'(')); #!(show (::c1));
+         #!(show (#!',')); #!(show (::c2));
+         #!(show (#!',')); #!(show (::c3));
+         #!(show (#!',')); #!(show (::c4));
+         #!(show (#!',')); #!(show (::c5));
+         #!(show (#!',')); #!(show (::c6));
+         #!(show (#!',')); #!(show (::c7));
+         #!(show (#!',')); #!(show (::c8));
+         #!(show (#!')')) }
+     }
+};
+
+-- Type: (a, b, c, d, e, f, g, h, i)
+
+instance Env (b, c, d, e, f, g, h, i, j) where {
+   inline needsEnv nonuple =
+      case nonuple of {(c1, c2, c3, c4, c5, c6, c7, c8, c9) ->
+         #!((#!(needsEnv c1)) or
+             (#!(needsEnv c2)) or
+             (#!(needsEnv c3)) or
+             (#!(needsEnv c4)) or
+             (#!(needsEnv c5)) or
+             (#!(needsEnv c6)) or
+             (#!(needsEnv c7)) or
+             (#!(needsEnv c8)) or
+             (#!(needsEnv c9)))};
+   inline mapToEnv nonuple env =
+      case nonuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9) ->
+         #!(¬^(#!(mapToEnv c1 env)),
+             ¬^(#!(mapToEnv c2 env)),
+             ¬^(#!(mapToEnv c3 env)),
+             ¬^(#!(mapToEnv c4 env)),
+             ¬^(#!(mapToEnv c5 env)),
+             ¬^(#!(mapToEnv c6 env)),
+             ¬^(#!(mapToEnv c7 env)),
+             ¬^(#!(mapToEnv c8 env)),
+             ¬^(#!(mapToEnv c9 env)))}
+};
+
+instance Mark_GC (b, c, d, e, f, g, h, i, j) where {
+   inline mark_GC nonuple =
+      case nonuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9) -> {
+          mark_GC c1;
+          mark_GC c2;
+          mark_GC c3;
+          mark_GC c4;
+          mark_GC c5;
+          mark_GC c6;
+          mark_GC c7;
+          mark_GC c8;
+          mark_GC c9} }
+};
+
+instance Eq (b, c, d, e, f, g, h, i, j) where {
+   inline (=) x y =
+      case x of { (x1, x2, x3, x4, x5, x6, x7, x8, x9) ->
+         case y of { (y1, y2, y3, y4, y5, y6, y7, y8, y9) ->
+            x1 = y1 and
+            x2 = y2 and
+            x3 = y3 and
+            x4 = y4 and
+            x5 = y5 and
+            x6 = y6 and
+            x7 = y7 and
+            x8 = y8 and
+            x9 = y9
+        }
+     }
+};
+
+instance Textual (b, c, d, e, f, g, h, i, j) where {
+  inline stringify nonuple =
+     case nonuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9) ->
+        '(' ++ (stringify (::c1)) ++
+        ',' ++ (stringify (::c2)) ++
+        ',' ++ (stringify (::c3)) ++
+        ',' ++ (stringify (::c4)) ++
+        ',' ++ (stringify (::c5)) ++
+        ',' ++ (stringify (::c6)) ++
+        ',' ++ (stringify (::c7)) ++
+        ',' ++ (stringify (::c8)) ++
+        ',' ++ (stringify (::c9)) ++ ')'
+     }
+};
+
+instance Show (b, c, d, e, f, g, h, i, j) where {
+   inline show nonuple =
+      #!case nonuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9) -> #!{
+         #!(show (#!'(')); #!(show (::c1));
+         #!(show (#!',')); #!(show (::c2));
+         #!(show (#!',')); #!(show (::c3));
+         #!(show (#!',')); #!(show (::c4));
+         #!(show (#!',')); #!(show (::c5));
+         #!(show (#!',')); #!(show (::c6));
+         #!(show (#!',')); #!(show (::c7));
+         #!(show (#!',')); #!(show (::c8));
+         #!(show (#!',')); #!(show (::c9));
+         #!(show (#!')')) }
+     }
+};
+
+-- Type: (a, b, c, d, e, f, g, h, i, j)
+
+instance Env (b, c, d, e, f, g, h, i, j, k) where {
+   inline needsEnv decuple =
+      case decuple of {(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) ->
+         #!((#!(needsEnv c1)) or
+             (#!(needsEnv c2)) or
+             (#!(needsEnv c3)) or
+             (#!(needsEnv c4)) or
+             (#!(needsEnv c5)) or
+             (#!(needsEnv c6)) or
+             (#!(needsEnv c7)) or
+             (#!(needsEnv c8)) or
+             (#!(needsEnv c9)) or
+             (#!(needsEnv c10)))};
+   inline mapToEnv decuple env =
+      case decuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) ->
+         #!(¬^(#!(mapToEnv c1 env)),
+             ¬^(#!(mapToEnv c2 env)),
+             ¬^(#!(mapToEnv c3 env)),
+             ¬^(#!(mapToEnv c4 env)),
+             ¬^(#!(mapToEnv c5 env)),
+             ¬^(#!(mapToEnv c6 env)),
+             ¬^(#!(mapToEnv c7 env)),
+             ¬^(#!(mapToEnv c8 env)),
+             ¬^(#!(mapToEnv c9 env)),
+             ¬^(#!(mapToEnv c10 env)))}
+};
+
+instance Mark_GC (b, c, d, e, f, g, h, i, j, k) where {
+   inline mark_GC decuple =
+      case decuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) -> {
+          mark_GC c1;
+          mark_GC c2;
+          mark_GC c3;
+          mark_GC c4;
+          mark_GC c5;
+          mark_GC c6;
+          mark_GC c7;
+          mark_GC c8;
+          mark_GC c9;
+          mark_GC c10} }
+};
+
+instance Eq (b, c, d, e, f, g, h, i, j, k) where {
+   inline (=) x y =
+      case x of { (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) ->
+         case y of { (y1, y2, y3, y4, y5, y6, y7, y8, y9, y10) ->
+            x1 = y1 and
+            x2 = y2 and
+            x3 = y3 and
+            x4 = y4 and
+            x5 = y5 and
+            x6 = y6 and
+            x7 = y7 and
+            x8 = y8 and
+            x9 = y9 and
+            x10 = y10
+        }
+     }
+};
+
+instance Textual (b, c, d, e, f, g, h, i, j, k) where {
+  inline stringify decuple =
+     case decuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) ->
+        '(' ++ (stringify (::c1)) ++
+        ',' ++ (stringify (::c2)) ++
+        ',' ++ (stringify (::c3)) ++
+        ',' ++ (stringify (::c4)) ++
+        ',' ++ (stringify (::c5)) ++
+        ',' ++ (stringify (::c6)) ++
+        ',' ++ (stringify (::c7)) ++
+        ',' ++ (stringify (::c8)) ++
+        ',' ++ (stringify (::c9)) ++
+        ',' ++ (stringify (::c10)) ++ ')'
+     }
+};
+
+instance Show (b, c, d, e, f, g, h, i, j, k) where {
+  inline show decuple =
+      #!case decuple of { (c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) -> #!{
+         #!(show (#!'(')); #!(show (::c1));
+         #!(show (#!',')); #!(show (::c2));
+         #!(show (#!',')); #!(show (::c3));
+         #!(show (#!',')); #!(show (::c4));
+         #!(show (#!',')); #!(show (::c5));
+         #!(show (#!',')); #!(show (::c6));
+         #!(show (#!',')); #!(show (::c7));
+         #!(show (#!',')); #!(show (::c8));
+         #!(show (#!',')); #!(show (::c9));
+         #!(show (#!',')); #!(show (::c10));
+         #!(show (#!')')) }
+     }
+};
+
+}

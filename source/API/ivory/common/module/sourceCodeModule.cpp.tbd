@@ -1,0 +1,111 @@
+/*------------------------------------------------------------------------------
+ *
+ * (c) Copyright (see Date) by Alasdair Scott
+ *
+ * Name:    builtInModule.cpp
+ *
+ * Module:  Ivory common
+ *
+ * Author:  A Scott
+ *
+ * Date:    18 November 2004
+ *
+ *------------------------------------------------------------------------------
+ *
+ * Description:
+ *
+ *    Module initialisation
+ *
+ * Notes:
+ *
+ * Modification history:
+ *
+ *-----------------------------------------------------------------------------
+ */
+
+#include <string.h>
+
+#include "ivory/module.h"
+#include "ivory/type.h"
+
+//#define DEBUG_INIT
+
+#ifdef DEBUG_INIT
+   #include "ivory/trace.h"
+#endif
+
+// Global module list
+
+Module* Module::globalList = NULL;
+
+Module::Module(Name name, const Env* env)
+   : _env(env), _nameV(NULL),
+   _typeData(NULL), _typeDataLen(0), _typeV(NULL) {
+
+   // Link into global list
+
+   _next = globalList;
+   globalList = this;
+}
+
+Module::Module(const char* identifiers,  Name nameV[],
+               unsigned char typeData[], UInt typeDataLen, Type typeV[])
+   : _env(NULL),
+     _nameV(nameV),
+     _typeData(typeData), _typeDataLen(typeDataLen), _typeV(typeV) {
+
+// Link into global list
+
+   _next    = globalList;
+   globalList  = this;
+
+   const char* ptr = identifiers;
+   const char* ePtr;
+   UInt i = 0;
+   while ((ePtr = strchr(ptr, '\0')) - ptr > 0) {
+      nameV[i] = builtInName$(ptr);
+      if (i++ == 0)
+         _name = nameV[0];          // Module name is first name
+      ptr = ePtr + 1;
+   }
+}
+
+// Post constructor initialisation
+// Assignes type array slots
+
+void Module::init() {
+
+   #ifdef DEBUG_INIT
+      outStream << "Assigning type array slots for Module :";
+      printName(_name, outStream, Env(builtInNameTable()));
+      outStream << '\n';
+      outStream.flush();
+   #endif
+
+   UInt typeIndex = 0;
+   unsigned char* data = _typeData;
+   while (data < _typeData + _typeDataLen) {
+      TypeSig typeSig = unpackTypeSig(data, _nameV, builtInNameTable(), builtInMSA());
+
+#ifdef DEBUG_INIT
+      printExpr(typeSig, outStream, Env(builtInNameTable()));
+      outStream << '\n';
+      outStream.flush();
+#endif
+
+      _typeV[typeIndex++] = useType(typeSig, builtInTypeTable());
+   }
+}
+
+void Module::initGlobalList(Void) {
+   Module* module;
+   while ((module = globalList) != NULL) {
+      globalList = module->_next;
+      module->init();
+   }
+}
+
+void dummyModuleInit(Void)
+{
+   Module::initGlobalList();
+}

@@ -1,0 +1,3 @@
+-- The first 47 Fibonacci numbers
+
+take 47 fibonaccis

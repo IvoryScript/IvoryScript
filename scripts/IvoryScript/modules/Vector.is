@@ -1,0 +1,331 @@
+-------------------------------------------------------------------------------
+--
+-- (c) Copyright (see Date) by Alasdair Scott
+ --
+-- Ivory Vector (dynamic length array) type
+--
+-- Designed for large arrays with segmented slices for memory efficiency.
+--
+-- Date:    7 February 2003
+--
+--
+-- License: MIT License
+--
+-- Permission is hereby granted, free of charge, to any person obtaining a
+-- copy of this software and associated documentation files (the "Software"),
+-- to deal in the Software without restriction, including without limitation
+-- the rights to use, copy, modify, merge, publish, distribute, sublicense,
+-- and/or sell copies of the Software, and to permit persons to whom the
+-- Software is furnished to do so, subject to the following conditions:
+--
+-- The above copyright notice and this permission notice shall be included in
+-- all copies or substantial portions of the Software.
+--
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+-- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+module Vector where {
+
+type Vector a = Vector [a] Int; {-- where {
+   lengthVector :: Vector a -> Int;
+   getAtVector :: Vector a -> Int -> a;
+   putAtVector :: Vector a -> Int -> a -> Void;
+   resizeVector :: Ptr (Vector a) -> Int -> Void;
+   addAtVector :: Ptr (Vector a) -> Int -> a -> Void;
+   removeAtVector :: Ptr (Vector a) -> Int -> Void;
+} --}
+
+-- Vector constructor
+
+Vector :: [a] -> Int -> (Int, Int, Ptr (Array(Ptr (Array a))));
+
+inline Vector (elems::[a]) nPerSlice =
+   let {
+      assignFrom :: Int -> Int -> [a] -> (Ptr (Array(Ptr (Array a)))) -> (Int, Int, Ptr (Array(Ptr (Array a))));
+      assignFrom nPerSlice i elems sliceTablePtr =
+         case elems of {
+            Cons x xs ->
+            assignFrom nPerSlice
+                       (i + 1)
+                       (::xs)
+                       (let { index ::Int =  i div nPerSlice;
+                              offset ::Int = i mod nPerSlice
+                        } in
+                           if offset = 0 then
+                              let { slicePtr :: Ptr (Array a) = allocPtrArray nPerSlice;
+                                    extSliceTablePtr :: Ptr (Array(Ptr (Array a))) = allocPtrArray (index + 1)
+                              } in {
+                                 copyPtrArray index sliceTablePtr 0 extSliceTablePtr 0;
+                                 putAtPtrArray extSliceTablePtr index slicePtr;
+                                 putAtPtrArray slicePtr 0 (mapToEnv x consEnv);
+                                 extSliceTablePtr
+                              }
+                           else {
+                              putAtPtrArray (getAtPtrArray sliceTablePtr index) offset (mapToEnv x consEnv) ;
+                              sliceTablePtr
+                           });
+                    
+            Nil -> (i, nPerSlice, ¬^sliceTablePtr)
+         }
+      } in
+         assignFrom nPerSlice 0 elems Null;
+
+-- Vector length
+
+lengthVector :: Vector a -> Int;
+inline lengthVector vec = case vec of {~Vector repr -> fst3 repr};
+
+-- Helper function to access a given index
+
+getAtVectorExt :: (Ptr (Array(Ptr (Array a)))) -> Int -> Int -> a;
+inline getAtVectorExt sliceTablePtr nPerSlice i =
+   getAtPtrArray (getAtPtrArray sliceTablePtr (i div nPerSlice)) (i mod nPerSlice);
+
+-- Value at a given index
+
+getAtVector :: Vector a -> Int -> a;
+inline getAtVector vec i =
+   #!case vec of {~Vector repr ->
+      if i >= 0 and i < (fst3 repr) then
+         #!(getAtVectorExt (thd3 repr) (snd3 repr) i)
+      else
+         #!(error "Vector index out of bounds")};
+
+-- The lowest index matching the given value, or -1 if not found
+
+findVectorIndex :: Vector a -> a -> Int;
+inline findVectorIndex vec k = case vec of {~Vector repr ->
+   let { l :: Int =                                    fst3 repr;
+         nPerSlice :: Int =                            snd3 repr;
+         sliceTablePtr :: Ptr (Array(Ptr (Array a))) = thd3 repr;
+         findFrom :: Ptr (Array(Ptr (Array a))) -> Int -> Int -> a -> Int -> Int;
+         findFrom sliceTablePtr l nPerSlice k i =
+            if i < l then
+               if (getAtVectorExt sliceTablePtr nPerSlice i) = k then
+                  i
+               else
+                  findFrom sliceTablePtr l nPerSlice k (i + 1)
+            else
+               -1 }
+   in
+      findFrom sliceTablePtr l nPerSlice k 0
+};
+
+-- Helper function for update at given index
+
+putAtVectorExt :: Ptr (Array(Ptr (Array a))) -> Int -> Int -> a -> Void;
+inline putAtVectorExt sliceTablePtr nPerSlice i x =
+   putAtPtrArray (getAtPtrArray sliceTablePtr (i div nPerSlice)) (i mod nPerSlice) x;
+
+-- Update at given index
+
+putAtVector :: Vector a -> Int -> a -> Void;
+inline putAtVector vec i x =
+   case vec of {~Vector repr ->
+      if i >= 0 and i < (fst3 repr) then
+         putAtVectorExt (thd3 repr) (snd3 repr) i x
+      else
+         #!(error "Vector index out of bounds")};
+ 
+-- Vector instance of Env
+
+instance Env Vector b where {
+   inline needsEnv vec = True;
+   inline mapToEnv (vec::Vector b) env =
+      case vec of {~Vector repr ->
+         let {
+            n :: Int =           fst3 repr;
+            nPerSlice :: Int =   snd3 repr
+         } in
+            if n > 0 then
+               let {
+                  srcSliceTablePtr :: Ptr (Array(Ptr (Array b))) = thd3 repr;
+                  dstSliceTablePtr :: Ptr (Array(Ptr (Array b))) = allocPtrArray ((n + nPerSlice - 1) div nPerSlice);
+                  copyFrom :: Ptr (Array(Ptr (Array b))) -> Ptr (Array(Ptr (Array b))) -> Int -> Int -> Int -> Int -> Void;
+                  copyFrom srcSliceTablePtr dstSliceTablePtr nPerSlice index n i = {
+                     if i < n then {
+                        let {
+                           dstSlicePtr :: Ptr (Array b) = allocPtrArray nPerSlice; 
+                           copyElements :: Ptr (Array b) -> Ptr (Array b) -> Int -> Int -> Void;
+                           copyElements srcSlicePtr dstSlicePtr n i  = {
+                              if i < n then {
+                                 let x :: b = #!(mapToEnv (getAtPtrArray srcSlicePtr i) consEnv) in {
+                                    putAtPtrArray dstSlicePtr i x;
+                                    copyElements srcSlicePtr dstSlicePtr n (i + 1)
+                                 }
+                              }
+                           }
+                        } in {
+                           putAtPtrArray dstSliceTablePtr index dstSlicePtr;
+                           copyElements (getAtPtrArray srcSliceTablePtr index) dstSlicePtr
+                                        (if n - i < nPerSlice then n - i else nPerSlice) 0;
+                        };
+                        copyFrom srcSliceTablePtr dstSliceTablePtr nPerSlice (index + 1) n (i + nPerSlice)
+                     }                 
+                  }
+               } in {
+                  let currEnv = consEnv
+                  in {
+                     setEnv env;
+                     copyFrom srcSliceTablePtr dstSliceTablePtr nPerSlice 0 n  0  ;
+                     let res :: Vector b = ~Vector (n, nPerSlice, ¬^dstSliceTablePtr)
+                     in {
+                        setEnv currEnv;
+                        res
+                     }
+                  }
+               }
+            else
+               ~Vector (0, nPerSlice, ¬^(Null::Ptr (Array(Ptr (Array b)))))
+         }
+};
+
+-- Vector instance of Mark_GC
+
+instance Mark_GC Vector b where {
+   inline mark_GC vec = case vec of {~Vector repr ->
+      let len :: Int = fst3 repr
+      in
+         if len >= 0 then
+            let {
+               nPerSlice :: Int = snd3 repr;
+               sliceTablePtr :: Ptr (Array(Ptr (Array b))) = thd3 repr;
+               markFrom :: Ptr (Array(Ptr (Array b))) -> Int -> Int -> Int -> Void;
+               markFrom sliceTablePtr nPerSlice index len   =
+                  if (index * nPerSlice < len) then {
+                     let {
+                        slicePtr :: Ptr (Array b) = getAtPtrArray sliceTablePtr index;
+                        markSlice :: Int -> Int -> Ptr (Array b) -> Void;
+                        markSlice i n slicePtr =
+                           if i < n then {
+                              mark_GC !(getAtPtrArray slicePtr i);
+                              markSlice (i + 1) n slicePtr
+                           }                         
+                     } in
+                        if markPtr_GC slicePtr then
+                           markSlice 0 (if len >= nPerSlice then nPerSlice else len) slicePtr;
+                     markFrom sliceTablePtr nPerSlice (index + 1) len  
+                  }
+            } in
+               if markPtr_GC sliceTablePtr then
+                  markFrom sliceTablePtr nPerSlice 0 len ;
+   }
+};
+
+-- Vector instance of Seq
+
+instance Seq Vector b where {
+   inline length = lengthVector;
+};
+
+-- Vector instance of IndexableSeq
+
+instance IndexableSeq Vector b, b where { 
+   inline getAt =  getAtVector;
+   inline putAt =  putAtVector
+};
+
+-- Vector instance of Show
+
+instance Show Vector b where {
+   inline show vec = case vec of { ~Vector repr ->
+      let { l :: Int = fst3 repr;
+            nPerSlice :: Int = snd3 repr;
+            sliceTablePtr :: Ptr (Array(Ptr (Array b))) = thd3 repr;
+            showElem :: Ptr (Array(Ptr (Array b))) -> Int -> Int -> Void;
+            showElem sliceTablePtr nPerSlice i =
+               show (getAtVectorExt sliceTablePtr nPerSlice i);
+            showFrom :: Ptr (Array(Ptr (Array b))) -> Int -> Int -> Int -> Void;
+            showFrom sliceTablePtr nPerSlice l i =
+               if i < l then
+                  { show ',';
+                    showElem sliceTablePtr nPerSlice i;
+                    showFrom sliceTablePtr nPerSlice l (i + 1) }
+               else
+                  show ']'}
+      in {
+         if l = 0 then show "[]"
+                  else  { show '[';
+                          showElem sliceTablePtr nPerSlice 0;
+                          showFrom sliceTablePtr nPerSlice  l 1 }
+      }
+   }
+};
+
+-- (InputStream Byte), Vector instance of StreamExtract 
+
+instance StreamExtract InputStream Byte, Vector c where {
+   inline extract is = 
+      let {
+         nPerSlice :: Int =   extract is;
+         len :: Int =         extract is;
+         sliceTablePtr :: Ptr (Array(Ptr (Array c))) = 
+            if len = 0 then Null
+                       else allocPtrArray ((len + nPerSlice - 1) div nPerSlice);
+
+         extractFrom :: InputStream Byte -> Ptr (Array(Ptr (Array c))) -> Int -> Int -> Int -> Void;
+         extractFrom is sliceTablePtr index nPerSlice n  =
+            if (index * nPerSlice < n) then {
+               let {
+                  slicePtr :: Ptr (Array c) = allocPtrArray nPerSlice;
+                  extractSlice :: InputStream Byte -> Ptr (Array c) -> Int -> Int -> Void;
+                  extractSlice is slicePtr n i  =
+                     if i < n then {
+                        putAtPtrArray slicePtr i (extract is);  
+                        extractSlice is slicePtr n (i + 1)
+                     }                         
+               } in {
+                  putAtPtrArray sliceTablePtr index slicePtr;
+                  extractSlice is slicePtr (if n >= nPerSlice then nPerSlice else n) 0
+               };
+               extractFrom is sliceTablePtr (index + 1) nPerSlice n  
+            };
+
+      } in {
+         if (len > 0) then
+            extractFrom is sliceTablePtr 0 nPerSlice len ;
+         ~Vector #!(¬^len,  ¬^nPerSlice, ¬^sliceTablePtr);
+      }
+};
+
+-- (OutputStream Byte), Vector instance of StreamInsert 
+
+instance StreamInsert OutputStream Byte, Vector c where {
+   inline insert os v = case v of { ~Vector repr ->
+      let {
+         len :: Int = fst3 repr;
+         nPerSlice :: Int = snd3 repr;
+         sliceTablePtr :: Ptr (Array(Ptr (Array c))) = thd3 repr;
+
+         insertFrom :: OutputStream Byte -> Ptr (Array(Ptr (Array c))) -> Int -> Int -> Int -> Void;
+         insertFrom os sliceTablePtr index nPerSlice n =
+            if (index * nPerSlice < n) then {
+               let {
+                  slicePtr :: Ptr (Array c) = getAtPtrArray sliceTablePtr index;
+                  insertSlice :: OutputStream Byte -> Ptr (Array c) -> Int -> Int -> Void;
+                  insertSlice is slicePtr n i   =
+                     if i < n then {
+                        insert is #!(getAtPtrArray slicePtr i);
+                        insertSlice is slicePtr n (i + 1) 
+                     }                         
+               } in
+                  insertSlice os slicePtr (if n >= nPerSlice then nPerSlice else n) 0;
+               insertFrom os sliceTablePtr (index + 1) nPerSlice n
+            }
+
+      } in {
+         insert os nPerSlice;
+         insert os len;
+         insertFrom os sliceTablePtr 0 nPerSlice len
+      }
+   }
+};
+
+}

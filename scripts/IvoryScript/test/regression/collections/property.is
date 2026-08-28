@@ -1,0 +1,15 @@
+let p = Property #x 42 in {
+    show p;                   show '\n'
+};
+
+let p = Property #name "hello" in {
+    show p;                   show '\n'
+};
+
+let p = Property #ratio 3.14 in {
+    show p;                   show '\n'
+};
+
+let p = Property #active True in {
+    show p;                   show '\n'
+};

@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Configuration
+SERVER_IP="127.0.0.1"
+SERVER_PORT=9090
+NUM_CLIENTS=5
+TEST_DURATION=10
+
+echo "--- Starting ISSS Load Test with $NUM_CLIENTS clients ---"
+
+# Function to simulate an IvoryScript client session
+simulate_client() {
+    local id=$1
+    echo "Client $id: Connecting..."
+    
+    # Use netcat to send a command and wait for a response
+    # We use a subshell to keep the connection open for a few seconds
+    (
+        echo "LOGIN user_$id pass_$id"
+        sleep 2
+        echo "EXEC calculate_stats"
+        sleep 3
+        echo "EXIT"
+    ) | nc $SERVER_IP $SERVER_PORT > /dev/null 2>&1
+
+    if [ $? -eq 0 ]; then
+        echo "Client $id: Session completed successfully."
+    else
+        echo "Client $id: CONNECTION FAILED (Server might be down or full)."
+    fi
+}
+
+# Launch clients in the background
+for i in $(seq 1 $NUM_CLIENTS); do
+    simulate_client $i &
+done
+
+# Wait for all background jobs to finish
+wait
+
+echo "--- Test Complete ---"
+echo "Check the ISSS console output for any 'Poll set full' or memory errors."
