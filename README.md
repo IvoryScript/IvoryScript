@@ -395,7 +395,7 @@ IvoryScript is approaching its stable release and welcomes early contributors.
 3. **Commit** your changes (`git commit -m 'Add my feature'`)
 4. **Push** and open a **Pull Request**
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting. All contributors are expected to follow our [Code of Conduct](CONTRIBUTING.md#code-of-conduct).
+Please read [CONTRIBUTING.md](https://github.com/IvoryScript/.github/blob/main/CONTRIBUTING.md) before submitting. All contributors are expected to follow our [Code of Conduct](https://github.com/IvoryScript/.github/blob/main/CONTRIBUTING.md#code-of-conduct).
 
 ---
 
