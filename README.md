@@ -409,4 +409,4 @@ Please read [CONTRIBUTING.md](https://github.com/IvoryScript/.github/tree/main/p
 
 ## 📄 Licence
 
-IvoryScript is released under the [MIT Licence](https://github.com/IvoryScript/.github/tree/main/profile/LICENCE).
+IvoryScript is released under the [MIT Licence](https://github.com/IvoryScript/.github/tree/main/LICENCE).
