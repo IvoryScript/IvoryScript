@@ -152,13 +152,14 @@ sourceSubDirs := any \
 objectDirs=$(addprefix $(objectDir), $(sourceSubDirs))
 
 define makeObject =
-source_file := $(1)
-obj_file := $(objectDir)/$(1:.cpp=.o)
-objects += $$(obj_file)
-dep_file := $(objectDir)/$(1:.cpp=.d)
-$$(obj_file): $$(source_file) | $(objectDir)
+$source := $(1)
+object := $(objectDir)$(source:.cpp=.o)
+allObjects := $(allObjects) $$(object)
+dependencyRule=$(objectDir)/$(source:.cpp=.d)
+dependencies += $(dependencyRule)
+$$(object): $$(source)
 	$(CXX) $(DEPFLAGS) $(CFLAGS) $(DEFINES) $(includes) $$< -o $$@
--include $$(dep_file)
+-include $(dependencyRule)
 endef
 
 define makeSubdir =
