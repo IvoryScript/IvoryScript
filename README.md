@@ -374,11 +374,6 @@ Only the source paths required by IvoryScript and their shared support code are 
 
 ## Documentation
 
-Further documentation is available at [ivoryscript.net/documents](https://ivoryscript.net/documents), including the User Guide, Reference Manual and articles discussing the design and semantics of IvoryScript.
-
-
-## Documentation
-
 Full documentation is available at [ivoryscript.net/documents](https://ivoryscript.net/documents):
 
 - **[Getting Started](https://ivoryscript.net/documents/getting-started)** — console access, basic examples, and core concepts
@@ -388,7 +383,7 @@ Full documentation is available at [ivoryscript.net/documents](https://ivoryscri
 
 ## Contributing
 
-IvoryScript is approaching its stable release and welcomes early contributors.
+IvoryScript is in beta, with the language and runtime well established and further development continuing. Early contributors are welcome.
 
 1. **Fork** this repository
 2. **Create** a feature branch (`git checkout -b feature/my-feature`)
