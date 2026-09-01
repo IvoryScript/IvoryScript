@@ -619,6 +619,12 @@ static Expr freeVarAssocVal(FreeVarAssoc& freeVarAssoc) {
    return freeVarVal;
 }
 
+static Bool freeVarAssocNeedsStorage(const FreeVarAssoc& freeVarAssoc) {
+   return freeVarAssoc.isGlobal() ||
+          freeVarAssoc.needsClosure() ||
+          freeVarAssoc.selfReferential();
+}
+
 // Lambda code generation
 
 Void Lambda::rebindFreeVarAssoc(Expr oldVal, Expr newVal) {
@@ -638,6 +644,10 @@ StructTemplate& Lambda::allocFreeVars(UInt nSlots, Code& code, CodeLabel& failLa
    UInt i = 0;
    FreeVarAssoc* freeVarAssoc = _freeVarAssocs;
    while (freeVarAssoc != NULL) {
+      if (!freeVarAssocNeedsStorage(*freeVarAssoc)) {
+         freeVarAssoc = freeVarAssoc->next();
+         continue;
+      }
       Expr freeVarVal = freeVarAssocVal(*freeVarAssoc);
       if (freeVarAssoc->isGlobal()) {
          assert(formOf(freeVarVal) == VAR, "Lambda::allocFreeVars: Expected VAR");
@@ -682,6 +692,8 @@ Void Lambda::genFreeVars(UInt nSlots, Var** slotVars,
    for (FreeVarAssoc* freeVarAssoc = _freeVarAssocs;
       freeVarAssoc != NULL;
       freeVarAssoc = freeVarAssoc->next()) {
+      if (freeVarAssoc->closedVar() == NULL)
+         continue;
 
       Var& closedVar = cellBody(*freeVarAssoc->closedVar(), Var);
 
@@ -1893,6 +1905,7 @@ Void Var::genEnter(FnAp* fnAp, Code& code) {
 
    CodeLabel* entryLabel =
       _lambda != NULL &&
+      !_lambda->needsClosure() &&
       (_lambda->closure() == NULL ||
          (code.lambda() != NULL &&
             _lambda == code.lambda() ||
@@ -2078,7 +2091,8 @@ Void ReturnState::genEnterReduced(TypeSig typeSig, FnAp* fnAp, Code& code) {
 Expr NameOcc::val(Code& code) const {
    if (code.lambda() == NULL ||
       !code.lambda()->needsClosure() ||
-      freeVarAssoc() == NULL) {
+      freeVarAssoc() == NULL ||
+      freeVarAssoc()->closedVar() == NULL) {
       Expr val = this->val();
       ExprEnumVal form = formOf(val);
       if (_moduleDefn == NULL ||
@@ -2581,6 +2595,8 @@ Void MapClosure::genVarReduced(Var& dst, CodeLabel& failLab, Code& code) {
    for (FreeVarAssoc* freeVarAssoc = lambda._freeVarAssocs;
       freeVarAssoc != NULL;
       freeVarAssoc = freeVarAssoc->next()) {
+      if (freeVarAssoc->closedVar() == NULL)
+         continue;
 
       Var& localVar = cellBody(*freeVarAssoc->closedVar(), Var);
       if (localVar.kind() == Var::NON_GLOBAL_FREE_VAR &&
@@ -2684,6 +2700,8 @@ Void ExtractFreeVars::genVoidReduced(CodeLabel& failLab, Code& code) {
    for (FreeVarAssoc* freeVarAssoc = lambda._freeVarAssocs;
       freeVarAssoc != NULL;
       freeVarAssoc = freeVarAssoc->next()) {
+      if (freeVarAssoc->closedVar() == NULL)
+         continue;
       Var& localVar = cellBody(*freeVarAssoc->closedVar(), Var);
       if (localVar.kind() == Var::NON_GLOBAL_FREE_VAR &&
          !freeVarAssoc->selfReferential()) {
@@ -2746,6 +2764,8 @@ Void InsertFreeVars::genVoidReduced(CodeLabel& failLab, Code& code) {
    for (FreeVarAssoc* freeVarAssoc = lambda.freeVarAssocs();
       freeVarAssoc != NULL;
       freeVarAssoc = freeVarAssoc->next()) {
+      if (freeVarAssoc->closedVar() == NULL)
+         continue;
       Var& localVar = cellBody(*freeVarAssoc->closedVar(), Var);
       if (localVar.kind() == Var::NON_GLOBAL_FREE_VAR &&
          !freeVarAssoc->selfReferential()) {
@@ -2812,6 +2832,8 @@ Void MarkFreeVars_GC::genReturnReduced(TypeSig typeSig, CodeLabel& failLab, Code
    for (FreeVarAssoc* freeVarAssoc = lambda.parent()->_freeVarAssocs;
       freeVarAssoc != NULL;
       freeVarAssoc = freeVarAssoc->next()) {
+      if (freeVarAssoc->closedVar() == NULL)
+         continue;
       Var& localVar = cellBody(*freeVarAssoc->closedVar(), Var);
       if (localVar.kind() == Var::NON_GLOBAL_FREE_VAR &&
           !freeVarAssoc->selfReferential()) {

@@ -4097,6 +4097,7 @@ class FreeVarAssoc {
 public:
    FreeVarAssoc(FreeVarAssoc* next,
                 FreeVarAssoc* parent,
+                Name name,
                 TypedVal* typedVal,
                 const ModuleDefn* moduleDefn,
                 Cell* closedVar,
@@ -4117,6 +4118,7 @@ public:
    inline const FreeVarAssoc* next(Void) const { return _next; }
    inline FreeVarAssoc*& parent(Void) { return _parent; }
 
+   inline Name name(Void) const { return _name; }
    inline TypedVal*& typedVal(Void) { return _typedVal; }
    inline const TypedVal* typedVal(Void) const { return _typedVal; }
    inline const Expr val(Void) const { return _parent != NULL ? _parent->val() : _val; }
@@ -4133,6 +4135,7 @@ public:
 protected:
    FreeVarAssoc*     _next;            // Next in list
    FreeVarAssoc*     _parent;          // Parent lambda association
+   Name              _name;            // Free bound value name
    TypedVal*         _typedVal;        // Free bound value
    Expr              _val;             // Effective bound value used by codegen
    const ModuleDefn* _moduleDefn;      // Free binding module definition or NULL

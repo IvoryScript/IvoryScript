@@ -82,7 +82,7 @@ ByteCodeSection::ByteCodeSection(UInt id
 #endif
 
     _next(NULL), _byteVec(256), _bytePos(0),
-   _origin(0), _bytePtr(0) {
+   _origin(0), _bytePtr(0), _segment(NULL) {
 }
 
 Byte ByteCodeSection::getByte(UInt pos) const {
@@ -147,7 +147,8 @@ UInt ByteCodeSegment::childCount(Void) const {
 }
 
 Void ByteCodeSegment::appendSection(ByteCodeSection* section,
-                                    ByteCodeSegment* segment) {
+                                     ByteCodeSegment* segment) {
+   section->_segment = segment;
    if (_sections == NULL)
       _sections = section;
    for (ByteCodeSegment* seg = this; seg != NULL;
@@ -322,7 +323,7 @@ ByteCode::ByteCode(ConstString options, Env& env, MSA& msa)
    : ICode(options, env, msa),
     _rootSegment(NULL), _currSegment(NULL),
     _sectionId(0), _sections(NULL), _lastSection(NULL), _currSection(NULL),
-    _codeSection(NULL),
+    _codeSection(NULL), _branchBackPatchFlag(FALSE),
     _backPatchList(NULL) {
 }
 
@@ -446,6 +447,8 @@ Void ByteCode::genTarget(std::ostream& os)  {
    BackPatchElement* element;
    while ((element = _backPatchList) != NULL) {
       _backPatchList = element->_next;
+      if (element->branchCrossesSegments())
+         ivoryError("ByteCode::genTarget: BRA_INS crosses byte code segments");
       selectSection(&element->_posSection);
       putBits32At((Int)element->target() - (Int)element->origin(), element->_pos);
       msa().free(element);
@@ -1017,7 +1020,10 @@ Void GoToInstruction::genByteCode(ostream& os, ByteCode& code) const {
 
       case Operand::LABEL_OPERAND:
          code.genOpCode(BRA_INS, os);
-         break;
+         code.setBranchBackPatchFlag(TRUE);
+         target().genByteCode(os, code);
+         code.setBranchBackPatchFlag(FALSE);
+         return;
 
       default:
          assert(FALSE, "GoToInstruction::genByteCode: Unexpected target");
@@ -2394,9 +2400,9 @@ Void ByteCode::addLabelBackPatch(UInt pos, CodeLabel& codeLabel,
                                  Bool endOfInsFlag /* = TRUE */) {
    BackPatchElement* element = new (msa())
       LabelBackPatchElement(pos, *_currSection,
-                            0, *(_codeSection != NULL ? _codeSection
-                                                      : _currSection),
-                            codeLabel);
+                             0, *(_codeSection != NULL ? _codeSection
+                                                       : _currSection),
+                             codeLabel, _branchBackPatchFlag);
  
    if (endOfInsFlag)
       _currentIns->addBackPatch(element);          // Origin is end of instruction
@@ -2461,7 +2467,11 @@ BackPatchElement::BackPatchElement(UInt pos,    ByteCodeSection& posSection,
 UInt BackPatchElement::origin(Void) const {
    return _origin +
       (_originSection != NULL ? _originSection->origin()
-                              : 0);
+                               : 0);
+}
+
+Bool BackPatchElement::branchCrossesSegments(Void) const {
+   return FALSE;
 }
 
 SimpleBackPatchElement::SimpleBackPatchElement(UInt pos, ByteCodeSection& posSection,
@@ -2480,14 +2490,21 @@ UInt SimpleBackPatchElement::target(Void) const {
 
 
 LabelBackPatchElement::LabelBackPatchElement(UInt pos, ByteCodeSection& posSection,
-                                             UInt origin, ByteCodeSection& originSection,
-                                             CodeLabel& codeLabel)
+                                              UInt origin, ByteCodeSection& originSection,
+                                              CodeLabel& codeLabel, Bool branchFlag)
  : BackPatchElement(pos, posSection, origin, &originSection),
-   _codeLabel(codeLabel) {
+    _codeLabel(codeLabel), _branchFlag(branchFlag) {
 }
 
 UInt LabelBackPatchElement::target(Void) const {
    return _codeLabel._bytePos + _codeLabel._section->origin();
+}
+
+Bool LabelBackPatchElement::branchCrossesSegments(Void) const {
+   return _branchFlag &&
+      _originSection != NULL && _originSection->segment() != NULL &&
+      _codeLabel._section != NULL && _codeLabel._section->segment() != NULL &&
+      _originSection->segment() != _codeLabel._section->segment();
 }
 
 

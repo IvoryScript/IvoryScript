@@ -67,6 +67,8 @@ struct ImportRecord {
    UInt32   _offset;      // Segment offset for imported value or reference
 } ;
 
+class ByteCodeSegment;
+
 // ByteCodeSection: A subdivision of a byte code segment
 
 class ByteCodeSection {
@@ -106,6 +108,9 @@ public:
    UInt origin(Void) const {
       return _origin;
    }
+   const ByteCodeSegment* segment(Void) const {
+      return _segment;
+   }
    Void pad(UInt size, MSA& msa);
    Void reserve(UInt size, MSA& msa);
 
@@ -121,7 +126,8 @@ protected:
    UInt              _bytePos;   // local byte position
    UInt              _origin;    // origin relative to segment
    IAddress          _bytePtr;   // absolute origin
- 
+   ByteCodeSegment*  _segment;   // Owning segment
+  
    friend class ByteCodeSegment;
    friend class ByteCode;
 };
@@ -191,6 +197,7 @@ public:
                     UInt origin = 0, ByteCodeSection* originSection = NULL);
    UInt origin(Void) const;
    virtual UInt target(Void) const = 0;
+   virtual Bool branchCrossesSegments(Void) const;
 
 protected:
    BackPatchElement* _next;
@@ -234,8 +241,8 @@ protected:
 class LabelBackPatchElement : public BackPatchElement {
 public:
    LabelBackPatchElement(UInt pos, ByteCodeSection& posSection,
-                         UInt origin, ByteCodeSection& originSection, 
-                         CodeLabel& codeLabel);
+                          UInt origin, ByteCodeSection& originSection, 
+                          CodeLabel& codeLabel, Bool branchFlag = FALSE);
    inline Void* operator new(size_t size, MSA& msa) {
       Void *ptr = msa.alloc(size);
       return ptr;
@@ -249,9 +256,11 @@ public:
    }
 #endif
    virtual UInt target(Void) const;
+   virtual Bool branchCrossesSegments(Void) const;
 
 protected:
    CodeLabel&  _codeLabel;
+   Bool        _branchFlag;
 };
 
 // SegmentBackPatchElement: Segment address back-patch element
@@ -372,7 +381,13 @@ public:
                          UInt target, UInt targetSectionId = DATA_SECTION_ID,
                          Bool endOfInsFlag = TRUE);
    Void addSegmentBackPatch(UInt pos, Lambda& lambda,
-                            Bool endOfInsFlag = TRUE);
+                             Bool endOfInsFlag = TRUE);
+   inline Bool branchBackPatchFlag(Void) const {
+      return _branchBackPatchFlag;
+   }
+   inline Void setBranchBackPatchFlag(Bool flag) {
+      _branchBackPatchFlag = flag;
+   }
    inline ByteCodeSegment* currSegment(Void) const {
       return _currSegment;
    }
@@ -398,6 +413,7 @@ protected:
    ByteCodeSection*  _codeSection;
    ByteCodeSection*  _entrySection;
    UInt              _entryPos;
+   Bool              _branchBackPatchFlag;
 
    BackPatchElement* _backPatchList;
  

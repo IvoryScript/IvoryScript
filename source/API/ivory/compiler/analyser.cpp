@@ -141,6 +141,12 @@ static Defn::RecInitStrategy recInitStrategy(Defn& defn,
    return Defn::REC_INIT_RESERVED;
 }
 
+static Void markAssocClosureValue(Lambda& lambda,
+                                  FreeVarAssoc& freeVarAssoc);
+
+static Void propagateDirectLambdaFreeVars(Lambda& lambda,
+                                          Analyser& analyser);
+
 static Void forceDirectLambdaClosure(Lambda* lambda,
                                      Bool needsPartialAps,
                                      Analyser& analyser) {
@@ -148,8 +154,10 @@ static Void forceDirectLambdaClosure(Lambda* lambda,
       return;
    if (needsPartialAps)
       lambda->setNoPartialAps(FALSE);
-   if (!lambda->needsClosure())
+   if (!lambda->needsClosure()) {
       lambda->setNeedsClosure(TRUE);
+      propagateDirectLambdaFreeVars(*lambda, analyser);
+   }
 }
 
 static Void forceClosure(Defn& defn, Analyser& analyser) {
@@ -271,6 +279,61 @@ static Void markCurrentRecBinding(RecReservationReason reason,
                 defn,
                 reason,
                 analyser);
+}
+
+static Void markAssocClosureValue(Lambda& lambda,
+                                  FreeVarAssoc& freeVarAssoc) {
+   if (!freeVarAssoc.needsClosure()) {
+      freeVarAssoc.setNeedsClosure(TRUE);
+      if (!freeVarAssoc.isGlobal() &&
+          !freeVarAssoc.selfReferential())
+         lambda._nNonGlobalFree++;
+   }
+}
+
+static Void propagateDirectLambdaAssocClosure(Lambda& lambda,
+                                              FreeVarAssoc& freeVarAssoc,
+                                              Analyser& analyser) {
+   if (freeVarAssoc.closedVar() != NULL ||
+       freeVarAssoc.typedVal() == NULL)
+      return;
+
+   Expr freeVal = freeVarAssoc.typedVal()->val();
+   if (formOf(freeVal) != DEFN)
+      return;
+
+   Defn& defn = toBody(freeVal, Defn);
+   Lambda* directLambda = defn.directLambda();
+   if (directLambda == NULL)
+      return;
+
+   Bool propagateBinding = lambda.parent() != NULL &&
+      !freeVarAssoc.needsClosure();
+   markAssocClosureValue(lambda, freeVarAssoc);
+   forceDirectLambdaClosure(directLambda, FALSE, analyser);
+   analyser.markRecNameOcc(freeVarAssoc.name(),
+                           freeVarAssoc.typedVal(),
+                           TRUE);
+
+   if (propagateBinding)
+      lambda.parent()->analyseBinding(NULL,
+                                      freeVarAssoc.typedVal(),
+                                      NULL,
+                                      defn.parentLambda(),
+                                      FALSE,
+                                      TRUE,
+                                      TRUE,
+                                      freeVarAssoc.parent(),
+                                      analyser);
+}
+
+static Void propagateDirectLambdaFreeVars(Lambda& lambda,
+                                          Analyser& analyser) {
+   FreeVarAssoc* freeVarAssoc = lambda.freeVarAssocs();
+   while (freeVarAssoc != NULL) {
+      propagateDirectLambdaAssocClosure(lambda, *freeVarAssoc, analyser);
+      freeVarAssoc = freeVarAssoc->next();
+   }
 }
 
 static Lambda* directReducedLambda(Expr expr) {
@@ -410,7 +473,8 @@ Void Defn::analyse(TypeSig typeSig, Analyser& analyser) {
          analyser.setClosureValueBody(FALSE);
          lambda->analyse(typeSig, analyser);
          analyser.setClosureValueBody(prevClosureValueBody);
-      } else
+      }
+      else
          analyser.analyseValOf(_expr, typeSig, 0);
    }
 
@@ -524,23 +588,13 @@ Void Lambda::analyseBinding(NameOcc* nameOcc,
       return;
 
    Bool selfReferential = FALSE;
-   Bool directLambdaNeedsNoStorage = FALSE;
-   if (!isGlobal && !needsClosureValue && typedVal != NULL) {
+   if (!isGlobal && typedVal != NULL) {
       Expr freeVal = typedVal->val();
       if (formOf(freeVal) == DEFN) {
          Defn& defn = toBody(freeVal, Defn);
          Lambda* directLambda = defn.directLambda();
          selfReferential = directLambda == this;
-         directLambdaNeedsNoStorage =
-            directLambda != NULL &&
-            !selfReferential &&
-            !directLambda->needsClosure();
       }
-   }
-
-   if (directLambdaNeedsNoStorage) {
-      freeVarAssoc = NULL;
-      return;
    }
 
 // Test for existing free variable association
@@ -550,9 +604,10 @@ Void Lambda::analyseBinding(NameOcc* nameOcc,
       if (!isGlobal && typedVal == freeVarAssocs->typedVal()) {
          freeVarAssoc = freeVarAssocs;
          if (needsClosureValue)
-            freeVarAssoc->setNeedsClosure(TRUE);
+            markAssocClosureValue(*this, *freeVarAssoc);
          if (needsClosure && !_needsClosure) {
             setNeedsClosure(TRUE);
+            propagateDirectLambdaFreeVars(*this, analyser);
 
 //--------- Propagate need for closure up ancestor chain
 //--------- Associated ancestor free variables already exist
@@ -568,27 +623,6 @@ Void Lambda::analyseBinding(NameOcc* nameOcc,
       freeVarAssocs = freeVarAssocs->next();
    }
 
-   if (!isGlobal && !needsClosure && typedVal != NULL) {
-      Expr freeVal = typedVal->val();
-      if (formOf(freeVal) == DEFN) {
-         Defn& defn = toBody(freeVal, Defn);
-         Lambda* directLambda = defn.directLambda();
-         if (directLambda != NULL &&
-            !directLambda->needsClosure() &&
-            !defn.recInitPending()) {
-            freeVarAssoc = NULL;
-            return;
-         }
-      }
-   }
-
-   if (!selfReferential && typedVal != NULL) {
-      Expr freeVal = typedVal->val();
-      selfReferential =
-         formOf(freeVal) == DEFN &&
-         toBody(freeVal, Defn).directLambda() == this;
-   }
-
 #ifdef TRACE
    if (traceFlag && nameOcc != NULL) {
       outStream << "Adding " <<
@@ -601,7 +635,7 @@ Void Lambda::analyseBinding(NameOcc* nameOcc,
    Cell* cell_ = NULL;
 
    if (!isGlobal) {
-      if (!selfReferential)
+      if (needsClosureValue && !selfReferential)
          _nNonGlobalFree++;
       if (needsClosure && !_needsClosure)
          setNeedsClosure(TRUE);
@@ -609,9 +643,10 @@ Void Lambda::analyseBinding(NameOcc* nameOcc,
 
    _freeVarAssocs = new (analyser.msa())
       FreeVarAssoc(_freeVarAssocs,
-         NULL,
-         typedVal,
-         nameOcc != NULL ? nameOcc->_moduleDefn : NULL,
+          NULL,
+          nameOcc != NULL ? nameOcc->name() : NULL_NAME,
+          typedVal,
+          nameOcc != NULL ? nameOcc->_moduleDefn : NULL,
           cell_,
           isGlobal,
           needsClosureValue,
@@ -634,6 +669,9 @@ Void Lambda::analyseBinding(NameOcc* nameOcc,
          needsClosureValue,
          _freeVarAssocs->parent(),
          analyser);
+
+   if (_needsClosure)
+      propagateDirectLambdaAssocClosure(*this, *_freeVarAssocs, analyser);
 }
 
 // Void Lambda::analyse: Basic lambda analysis
@@ -658,31 +696,8 @@ Void Lambda::analyse(TypeSig typeSig, Analyser& analyser) {
 // If this lambda needs a closure, ensure any direct lambdas
 // bound to a free variable also need closures.
 
-   if (_needsClosure && _parent != NULL) {
-      FreeVarAssoc* freeVarAssoc = _freeVarAssocs;
-      while (freeVarAssoc != NULL) {
-         if (freeVarAssoc->closedVar() == NULL &&
-             freeVarAssoc->needsClosure()) {
-            Expr freeVal = freeVarAssoc->typedVal()->val();
-            if (formOf(freeVal) == DEFN) {
-               Lambda* directLambda = toBody(freeVal, Defn).directLambda();
-               if (directLambda != NULL) {
-                  directLambda->setNeedsClosure(TRUE);
-                  _parent->analyseBinding(NULL,
-                                          freeVarAssoc->typedVal(),
-                                          NULL,
-                                          toBody(freeVal, Defn).parentLambda(),
-                                          FALSE,
-                                          TRUE,
-                                          TRUE,
-                                          freeVarAssoc->parent(),
-                                          analyser);
-               }
-            }
-         }
-         freeVarAssoc = freeVarAssoc->next();
-      }
-   }
+   if (_needsClosure)
+      propagateDirectLambdaFreeVars(*this, analyser);
 
    analyser.setLambda(prevLambda);
    analyser.setLambdaDepth(prevLambdaDepth);
@@ -751,7 +766,9 @@ Bool FnAp::localFnNonPartial(Analyser& analyser,
 
             if (_nArgs == arity) {
                needsClosure =
-                  analyser.closureValueBody() &&
+                  (analyser.closureValueBody() ||
+                   (analyser.lambda() != NULL &&
+                    analyser.lambda()->needsClosure())) &&
                   recNameOccNeedsClosure(defn, (TypedVal*)typedVal, analyser);
                return TRUE;
             }

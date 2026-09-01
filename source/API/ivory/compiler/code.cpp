@@ -245,6 +245,7 @@ Void Var::printLocs(ostream& os, const Env& env) const {
 
 FreeVarAssoc::FreeVarAssoc(FreeVarAssoc* next,
                            FreeVarAssoc* parent,
+                           Name name,
                            TypedVal* typedVal, const ModuleDefn* moduleDefn, 
                            Cell* closedVar,
                            Bool isGlobal,
@@ -252,6 +253,7 @@ FreeVarAssoc::FreeVarAssoc(FreeVarAssoc* next,
                            Bool selfReferential)
  : _next(next),
    _parent(parent),
+   _name(name),
    _typedVal(typedVal),
    _val(typedVal->val()),
    _moduleDefn(moduleDefn),
@@ -5211,6 +5213,26 @@ UInt Code::peepholeOptimise(UInt pass) {
             }
             if (goToIns._target->kind() == Operand::LABEL_OPERAND) {
                CodeLabel& codeLabel = ((LabelOperand*)goToIns._target)->_codeLabel;
+               Instruction* targetNext = codeLabel.basicBlk()._firstIns->_next;
+               if (prevBasicBlk != NULL &&
+                  targetNext != NULL &&
+                  targetNext->kind() == Instruction::EXCEPTION_INSTR) {
+                  ExceptionInstruction* excIns = new(msa()) ExceptionInstruction();
+                  excIns->_seqNo = ins->_seqNo;
+
+   #ifdef TRACE
+                  if (traceFlag) {
+                     outStream << "Peephole optimise: replacing jump to exception = " << ins->_seqNo << '\n';
+                     outStream.flush();
+                  }
+   #endif
+
+                  insertInstruction(excIns, ins);
+                  prevBasicBlk->removeInstruction(ins, *this);
+                  nChanges++;
+                  inBody = FALSE;
+                  break;
+               }
                if (codeLabel._lambda == NULL &&
                   next == codeLabel.basicBlk()._firstIns) {
 
