@@ -69,7 +69,7 @@ NameTable::Entry* NameTable::addEntry(Name name, UInt hashVal,
                                       char* ident, UInt refCount) {
 
    Entry* entry = newEntry();
-   if ((entry = newEntry()) == NULL) {
+   if (entry == NULL) {
       error("NameTable::addEntry: no memory");
       return NULL;
    }

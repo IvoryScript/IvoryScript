@@ -51,11 +51,16 @@
 #include "ivory/streams.h"
 #include "ivory/void.h"
 #include "ivory/iSegmentTable.h"
+Void traceInterpreter(Bool flag);
+Bool interpreterTraceFlag(Void);
 
 defineBuiltInFn_2_args(insertBinEnv,
    builtInAp(typeCon(OutputStream), typeCon(Byte)), typeCon(Env), typeCon(Void),
    os, OutputStream_Byte,
    env, Env)
+
+   Bool traceFlag = interpreterTraceFlag();
+   traceInterpreter(FALSE);
 
    InsertArchive ia(os->_outputFn, osEnv);
    ia.insertVLU(env->msa().queryBlkLen());
@@ -77,6 +82,10 @@ defineBuiltInFn_2_args(insertBinEnv,
       env->cellInfoMap()->store(ia, *env->segmentTable());
    } else
       ia.insertVLU(0);
+
+   if (traceFlag)
+      traceInterpreter(TRUE);
+
 
    drop_Stack(insertBinEnv);
    returnVoid();

@@ -61,7 +61,7 @@
 
 int SegmentTable::match(const Byte* segment1, size_t len1,
                         const Byte* segment2, size_t len2) const {
-   return len1 == len2 && memcmp(segment1, segment2, len1)
+   return len1 == len2 && memcmp(segment1, segment2, len1) == 0
       ? 1
       : 0; 
 }

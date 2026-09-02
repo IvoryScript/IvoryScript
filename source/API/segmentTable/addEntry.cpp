@@ -70,7 +70,7 @@ SegmentTable::SegmentEntry* SegmentTable::addEntry(SegmentId id, UInt hashVal,
                                                    size_t len,
                                                    UInt refCount) {
    SegmentEntry* entry = newEntry();
-   if ((entry = newEntry()) == NULL) {
+   if (entry == NULL) {
       error("SegmentTable::addEntry: no memory");
       return NULL;
    }

@@ -109,13 +109,14 @@ objects :=
 all:	$(libraryDir)libsegmentTable.a
 
 define makeObject =
-source_file := $(1)
-obj_file := $(objectDir)/$(1:.cpp=.o)
-objects += $$(obj_file)
-dep_file := $(objectDir)/$(1:.cpp=.d)
-$$(obj_file): $$(source_file) | $(objectDir)
+$source := $(1)
+object := $(objectDir)$(source:.cpp=.o)
+allObjects := $(allObjects) $$(object)
+dependencyRule=$(objectDir)/$(source:.cpp=.d)
+dependencies += $(dependencyRule)
+$$(object): $$(source)
 	$(CXX) $(DEPFLAGS) $(CFLAGS) $(DEFINES) $(includes) $$< -o $$@
--include $$(dep_file)
+-include $(dependencyRule)
 endef
 
 $(foreach source,$(sources),$(eval $(call makeObject,$(source))))
