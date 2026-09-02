@@ -59,7 +59,9 @@ const ICellInfo* copyICellInfo(const ICellInfo* cellInfo, Env& env) {
       SegmentId segmentId = copySegment(segment, env);
       segmentCopy = (IAddress)env.segmentTable()->segment(segmentId);
       UInt32 hashVal = segmentHash(segment);
-      ICellInfoMapEntry* entry = env.cellInfoMap()->lookUp(segmentId, hashVal);
+      UInt32 entryOffset = (UInt32)(cellInfo->_byteCodeEntry - segment);
+      const ICellInfoMapEntry* entry =
+         env.cellInfoMap()->lookUp(segmentId, hashVal);
       if (entry == NULL) {
          ICellInfo* res  = new(env.msa()) ICellInfo(cellInfo->size(),
             cellInfo->_byteCodeEntry + (segmentCopy - segment),
@@ -78,7 +80,8 @@ const ICellInfo* copyICellInfo(const ICellInfo* cellInfo, Env& env) {
 
             segmentCopy);
 
-         ICellInfoMapEntry mapEntry = ICellInfoMapEntry(segmentId, res);
+         ICellInfoMapEntry mapEntry =
+            ICellInfoMapEntry(segmentId, entryOffset, res);
          env.cellInfoMap()->add(mapEntry, hashVal, env.msa());
          return res;
       }

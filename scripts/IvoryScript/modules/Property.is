@@ -64,6 +64,12 @@ instance Show Property where {
   show p = case p of { ~Property repr -> show repr };
 };
 
+-- OutputStream Char, Property instance of StreamInsert 
+
+instance StreamInsert OutputStream Char, Property where {
+  inline insert os p = case p of { ~Property repr -> insert os repr };
+};
+
 -- InputStream Byte, Property instance of StreamExtract 
 
 instance StreamExtract InputStream Byte, Property where {

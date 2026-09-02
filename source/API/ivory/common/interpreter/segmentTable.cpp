@@ -67,7 +67,6 @@
 
 ISegmentTable::ISegmentTable(unsigned int nSlots, unsigned int segSize, MSA& msa)
    : SegmentTable(nSlots, segSize, msa) {
-
 }
 
 SegmentId ISegmentTable::lookUp(const Byte* segment, size_t len, unsigned int hashVal) {

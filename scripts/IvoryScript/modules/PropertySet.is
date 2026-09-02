@@ -91,6 +91,12 @@ instance Show PropertySet where {
    show ps = case ps of { ~PropertySet repr -> show repr }
 };
 
+-- OutputStream Char, PropertySet instance of StreamInsert 
+
+instance StreamInsert OutputStream Char, PropertySet where {
+  inline insert os ps = insert os (properties ps);
+};
+
 -- (InputStream Byte), PropertySet instance of StreamExtract 
 
 instance StreamExtract InputStream Byte, PropertySet where {

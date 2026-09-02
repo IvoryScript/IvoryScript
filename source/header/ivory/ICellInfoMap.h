@@ -17,8 +17,8 @@
  *
  * Description:
  *
- *    Declarations relating to maintain a mapping between a segment id
- *    and a cell information structure.
+ *    Declarations relating to maintain a mapping between a segment id,
+ *    a cell-info entry offset, and a cell information structure.
  *
  * Notes:
  *
@@ -54,11 +54,14 @@
 
 class ICellInfoMapEntry {
 public:
-   ICellInfoMapEntry(SegmentId segmentId, ICellInfo* cellInfo)
-      : _segmentId(segmentId), _cellInfo(cellInfo) {}
+   ICellInfoMapEntry(SegmentId segmentId, UInt32 entryOffset,
+                     ICellInfo* cellInfo)
+      : _segmentId(segmentId), _entryOffset(entryOffset),
+        _cellInfo(cellInfo) {}
 
 public:
    SegmentId   _segmentId;
+   UInt32      _entryOffset; // Byte-code entry offset within the segment
    ICellInfo*  _cellInfo;
 
 friend class ICellInfoMap;
@@ -76,7 +79,6 @@ public:
 #endif
 
    Void add(ICellInfoMapEntry& entry, UInt hashVal, MSA& msa);
-
    Void load(Archive& archive, const SegmentTable& segmentTable, MSA& msa);
    Void store(Archive& archive, const SegmentTable& segmentTable) const;
 

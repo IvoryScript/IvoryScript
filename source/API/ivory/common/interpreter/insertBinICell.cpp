@@ -70,12 +70,17 @@
 #include "ivory/segment.h"
 #include "ivory/streams.h"
 
+
 extern Void insertBinICell(OutputStream_Byte& os, Env& osEnv,
-                        Cell& cell_, Env& cellEnv_ argN_VM) { 
+                           Cell& cell_, Env& cellEnv_ argN_VM) { 
    const ICellInfo& iCellInfo = static_cast<const ICellInfo&>(*static_cast<const CellInfo*>(cell_.tag()));
    InsertArchive ia(os._outputFn, &osEnv);
    IAddress segment = iCellInfo.segment();
-   ia << cellEnv_.segmentTable()->segmentId(segment, segmentHash(segment));
+   assert(cellEnv_.segmentTable() != NULL, "insertBinICell: Null segment table");
+   SegmentId segId = cellEnv_.segmentTable()->segmentId(segment, segmentHash(segment));
+   assert(segId != NULL_SEGMENT_ID, "insertBinICell: Null segment id");
+   ia << segId;
+//   ia << (UInt32)(iCellInfo._byteCodeEntry - segment);
    if (iCellInfo._byteCodeInsertFnEntry != NULL) {
       pushLabel(NULL);
       cell = &cell_;
@@ -83,5 +88,5 @@ extern Void insertBinICell(OutputStream_Byte& os, Env& osEnv,
       rEnv = static_cast<Env*>((Void*)&osEnv);
       rPtr = &os;
       callIContinuation(iCellInfo._byteCodeInsertFnEntry n_vm);
-   }  
+   }
 }

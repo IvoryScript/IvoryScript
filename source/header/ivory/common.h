@@ -418,7 +418,7 @@ public:
        ISegmentTable* segmentTable, ICellInfoMap* iCellInfoMap,
        TypeTable& typeTable)
       : _msa(NULL), _nameTable(&nameTable),
-        _segmentTable(segmentTable), _cellInfoMap(_cellInfoMap),
+        _segmentTable(segmentTable), _cellInfoMap(iCellInfoMap),
         _typeTable(&typeTable) {}
    Env(MSA& msa, NameTable& nameTable,
        ISegmentTable* segmentTable, ICellInfoMap* cellInfoMap,

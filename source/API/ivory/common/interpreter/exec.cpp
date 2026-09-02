@@ -366,13 +366,29 @@ Void callIContinuation(IAddress pc argN_VM) {
 // Byte code type descriptor methods
 
 declareLabel(typeDescrCallback$cont);
+declareLabel(typeDescrMapCallback$cont);
+declareLabel(typeDescrPtrEnvCallback$cont);
 
 #if (GARBAGE_COLLECTION==1)
 static BuiltInFrameDescr typeDescrCallback$frameDescr(label(typeDescrCallback$cont),
    sizeof(Label), 0, NULL);
+
+static BuiltInFrameDescr typeDescrMapCallback$frameDescr(label(typeDescrMapCallback$cont),
+   sizeof(Label) + sizeof(Env*), 0, NULL);
+
+static BuiltInFrameDescr typeDescrPtrEnvCallback$frameDescr(label(typeDescrPtrEnvCallback$cont),
+   sizeof(Label) + sizeof(Ptr) + sizeof(Env*), 0, NULL);
 #endif
 
 defineLabel(typeDescrCallback$cont) {
+   return NULL;
+}
+
+defineLabel(typeDescrMapCallback$cont) {
+   return NULL;
+}
+
+defineLabel(typeDescrPtrEnvCallback$cont) {
    return NULL;
 }
 
@@ -390,7 +406,7 @@ Void evalFnMethod(TypeDescr* typeDescr, Ptr ptr, Env& env argN_VM) {
 }
 
 Ptr mapFnMethod(TypeDescr* typeDescr, Ptr ptr, const Env& ptrEnv, Env& dstEnv argN_VM) {
-   pushLabel(label(typeDescrCallback$cont));
+   pushLabel(label(typeDescrMapCallback$cont));
 
 #ifdef TRACE
    if (traceFlag)
@@ -411,7 +427,7 @@ Ptr mapFnMethod(TypeDescr* typeDescr, Ptr ptr, const Env& ptrEnv, Env& dstEnv ar
 
 Void assignFnMethod(TypeDescr* typeDescr, Ptr src, const Env& srcEnv,
                   Ptr dst, Env& dstEnv argN_VM) {
-   pushLabel(label(typeDescrCallback$cont));
+   pushLabel(label(typeDescrPtrEnvCallback$cont));
 
 #ifdef TRACE
    if (traceFlag)
@@ -436,7 +452,7 @@ Void assignFnMethod(TypeDescr* typeDescr, Ptr src, const Env& srcEnv,
 Void insertTxtFnMethod(TypeDescr* typeDescr, OutputStream_Char* os,
                        const Env& osEnv, Ptr ptr,
                        const Env& env argN_VM) {
-   pushLabel(label(typeDescrCallback$cont));
+   pushLabel(label(typeDescrPtrEnvCallback$cont));
 
 #ifdef TRACE
    if (traceFlag)
@@ -466,7 +482,7 @@ Ptr extractBinFnMethod(TypeDescr* typeDescr, InputStream_Byte* is, const Env& is
 }
 
 Void insertBinFnMethod(TypeDescr* typeDescr, OutputStream_Byte* os, const Env& osEnv, Ptr ptr, Env& env argN_VM) {
-   pushLabel(label(typeDescrCallback$cont));
+   pushLabel(label(typeDescrPtrEnvCallback$cont));
 
 #ifdef TRACE
    if (traceFlag)
@@ -760,6 +776,13 @@ defineLabel(byteCodeCellCopy$cont) {
    jump(popLabel());
 }
 
+static Void execByteCodeUntilLabel(IAddress pc, Label stopLabel argN_VM) {
+   Label label_ = execByteCode(pc n_vm);
+   while (label_ != NULL && label_ != stopLabel)
+      label_ = (Label)(*label_)(vm);
+   assert(label_ == stopLabel, "execByteCodeUntilLabel: byte code returned without reaching expected label");
+}
+
 static Cell* byteCodeCellCopyFn(Cell& src, const Env& srcEnv, Env& env, MSA& msa argN_VM) {
    if (&srcEnv == &env)
       return &src;
@@ -773,7 +796,8 @@ static Cell* byteCodeCellCopyFn(Cell& src, const Env& srcEnv, Env& env, MSA& msa
       rEnv = &env;
       cell = &src;
       cellEnv = (Env*)(Void*)&srcEnv;
-      execByteCode(iCellInfo._byteCodeCopyFnEntry n_vm);
+      execByteCodeUntilLabel(iCellInfo._byteCodeCopyFnEntry,
+                             label(byteCodeCellCopy$cont) n_vm);
       return rCell;
    }
    else {
@@ -1147,7 +1171,9 @@ Label execByteCode(IAddress pc argN_VM) {
             if (src != NULL && srcEnv != dstEnv) {
                push(pc, IAddress);
                pushLabel(entry(iContinuation));
+               Void* const callSp = sp;
                dst = mapClosure(src, *srcEnv, *dstEnv n_vm);
+               assert(sp == callSp, "MAP_CL_INS: mapping returned with unbalanced stack");
                drop(sizeof(IAddress) + sizeof(Label));
             } else
                dst = src;
@@ -1164,7 +1190,9 @@ Label execByteCode(IAddress pc argN_VM) {
             if (srcEnv != dstEnv) {
                push(pc, IAddress);
                pushLabel(entry(iContinuation));
+               Void* const callSp = sp;
                dst = Expr(src, *srcEnv, *dstEnv, dstEnv->msa() n_vm);
+               assert(sp == callSp, "MAP_E_INS: mapping returned with unbalanced stack");
                drop(sizeof(IAddress) + sizeof(Label));
             } else
                dst = src;

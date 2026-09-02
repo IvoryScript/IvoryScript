@@ -20,7 +20,7 @@
  * Description:
  *
  *    Implementation of class to maintain a mapping from a segment id
- *    to a cell information structure.
+ *    and cell-info entry offset to a cell information structure.
  *
  * Notes:
  *
@@ -54,7 +54,16 @@ ICellInfoMap::ICellInfoMap(UInt nSlots)
 }
 
 Void ICellInfoMap::add(ICellInfoMapEntry& entry, UInt hashVal, MSA& msa) {
-   HashTable<Void*, ICellInfoMapEntry, SegmentId>::add(entry, hashVal, msa);
+   if (_slots == NULL)
+      allocSlots(msa);
+   else
+      if (lookUp(entry._segmentId, hashVal) != NULL) {
+         error("ICellInfoMap::add: key not unique");
+         return;
+      }
+
+   UInt index = hashVal % _nSlots;
+   _slots[index] = allocNode(entry, _slots[index], msa);
 }
 
 void* ICellInfoMap::allocNodePtr(size_t size, MSA& msa, Void*& link) {
@@ -103,7 +112,7 @@ Void ICellInfoMap::loadChain(UInt slotIndex, UInt len, Archive& archive, const S
 
          segment);
 
-      ICellInfoMapEntry mapEntry(segmentId, cellInfo);
+      ICellInfoMapEntry mapEntry(segmentId, entryOffset, cellInfo);
       HashTableNode<Void*, ICellInfoMapEntry, SegmentId>* node = (HashTableNode<Void*, ICellInfoMapEntry, SegmentId>*)allocNode(mapEntry, NULL, msa);
       *nodePtr = node;
       nodePtr = ((HashTableNode<Void*, ICellInfoMapEntry, SegmentId>**)&node->next());

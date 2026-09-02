@@ -75,7 +75,8 @@ extern Cell* extractBinICell(InputStream_Byte& is, Env& isEnv argN_VM) {
    ea >> segmentId;
 
    IAddress segment = (IAddress)consEnv->segmentTable()->segment(segmentId);
-   ICellInfoMapEntry* entry = consEnv->cellInfoMap()->lookUp(segmentId, segmentHash(segment));
+   const ICellInfoMapEntry* entry =
+      consEnv->cellInfoMap()->lookUp(segmentId, segmentHash(segment));
    ICellInfo* iCellInfo = entry->_cellInfo;
 
    Void* ptr = consMSA->alloc(sizeof(Cell) - MAX_CELL_BODY_SIZE + mkClosure_max(iCellInfo->size(), MIN_CLOSURE_SIZE));
